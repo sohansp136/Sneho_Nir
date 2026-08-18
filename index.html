@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>স্নেহনীড় হিসাব ও ম্যানেজমেন্ট (রিয়েল-টাইম)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center flex-wrap gap-2">
+    <div>
+      <h1 class="text-xl font-bold">🏠 স্নেহনীড় হিসাব ও ম্যানেজমেন্ট</h1>
+      <p id="liveDateTime" class="text-xs text-blue-100 mt-1"></p>
+    </div>
+    <div id="userInfo" class="text-sm flex items-center gap-2 hidden">
+      <span id="userBadge" class="bg-blue-800 px-3 py-1 rounded font-semibold text-xs">সদস্য</span>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold">লগআউট</button>
+    </div>
+  </header>
+
+  <!-- Login & Register Section -->
+  <div id="authSection" class="container mx-auto p-4 max-w-md mt-10">
+    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600">
+      <div class="flex border-b mb-4">
+        <button id="tabLoginBtn" onclick="toggleAuthMode('login')" class="w-1/2 py-2 font-bold text-blue-600 border-b-2 border-blue-600">লগইন</button>
+        <button id="tabRegisterBtn" onclick="toggleAuthMode('register')" class="w-1/2 py-2 font-bold text-gray-500">নতুন অ্যাকাউন্ট</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginForm" class="space-y-4">
+        <h2 class="text-lg font-bold text-center text-gray-800">লগইন করুন</h2>
+        <div>
+          <label class="block text-sm font-medium mb-1">ইমেইল</label>
+          <input type="email" id="loginEmail" placeholder="yourname@gmail.com" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">পাসওয়ার্ড</label>
+          <input type="password" id="loginPassword" placeholder="******" class="border p-2 rounded w-full">
+        </div>
+        <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">লগইন</button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" class="space-y-4 hidden">
+        <h2 class="text-lg font-bold text-center text-gray-800">নতুন সদস্য সাইন আপ</h2>
+        <div>
+          <label class="block text-sm font-medium mb-1">আপনার নাম</label>
+          <input type="text" id="regName" placeholder="রহিম / করিম" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">ইমেইল</label>
+          <input type="email" id="regEmail" placeholder="yourname@gmail.com" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+          <input type="password" id="regPassword" placeholder="******" class="border p-2 rounded w-full">
+        </div>
+        <button onclick="register()" class="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">অ্যাকোউন্ট তৈরি করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div id="dashboardSection" class="container mx-auto p-4 max-w-6xl hidden">
+    
+    <!-- Month/Year Selector & Member Search -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-2">
+        <label class="font-bold text-gray-700">📅 মাসের হিসাব:</label>
+        <select id="selectMonth" onchange="loadDashboardData()" class="border p-2 rounded bg-gray-50 font-semibold">
+          <option value="জানুয়ারি">জানুয়ারি</option>
+          <option value="ফেব্রুয়ারি">ফেব্রুয়ারি</option>
+          <option value="মার্চ">মার্চ</option>
+          <option value="এপ্রিল">এপ্রিল</option>
+          <option value="মে">মে</option>
+          <option value="জুন">জুন</option>
+          <option value="জুলাই">জুলাই</option>
+          <option value="আগস্ট" selected>আগস্ট</option>
+          <option value="সেপ্টেম্বর">সেপ্টেম্বর</option>
+          <option value="অক্টোবর">অক্টোবর</option>
+          <option value="নভেম্বর">নভেম্বর</option>
+          <option value="ডিসেম্বর">ডিসেম্বর</option>
+        </select>
+        <select id="selectYear" onchange="loadDashboardData()" class="border p-2 rounded bg-gray-50 font-semibold">
+          <option value="2025">২০২৫</option>
+          <option value="2026" selected>২০২৬</option>
+          <option value="2027">২০২৭</option>
+        </select>
+      </div>
+      <div>
+        <input type="text" id="searchMember" onkeyup="filterMembers()" placeholder="🔍 সদস্যের নাম দিয়ে খুঁজুন..." class="border p-2 rounded w-64 text-sm">
+      </div>
+    </div>
+
+    <!-- Top Summary Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-blue-500">
+        <p class="text-gray-500 text-sm"> সর্বমোট মিল</p>
+        <h2 id="totalMessMeals" class="text-2xl font-bold text-blue-600">0.0</h2>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-green-500">
+        <p class="text-gray-500 text-sm">মোট বাজার খরচ</p>
+        <h2 id="totalMessBazar" class="text-2xl font-bold text-green-600">৳ 0</h2>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-orange-500">
+        <p class="text-gray-500 text-sm">বর্তমান মিল রেট</p>
+        <h2 id="currentMealRate" class="text-2xl font-bold text-orange-600">৳ 0.00</h2>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-purple-500">
+        <p class="text-gray-500 text-sm">মোট ফিক্সড বিল (প্রতি জন)</p>
+        <h2 id="fixedBillPerHead" class="text-2xl font-bold text-purple-600">৳ 0</h2>
+      </div>
+    </div>
+
+    <!-- Cooking Meal Summary -->
+    <div class="bg-indigo-50 border-l-4 border-indigo-600 p-4 mb-6 rounded-lg shadow">
+      <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+        <h3 class="font-bold text-indigo-900 text-md">🍳 দৈনন্দিন রান্নার হিসাব</h3>
+        <div class="flex items-center gap-2">
+          <input type="date" id="summaryViewDate" onchange="loadDailySummary()" class="border p-1 rounded text-xs bg-white font-semibold">
+          <button onclick="toggleDailyDetails()" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-semibold shadow hover:bg-indigo-700">📋 বিবরণী ও ইডিট</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mt-3">
+        <div class="bg-white p-2 rounded border border-indigo-100">
+          <p class="text-xs text-gray-500 font-semibold">☀️ সকাল</p>
+          <h4 id="todayBfCount" class="text-lg font-bold text-indigo-600">0</h4>
+        </div>
+        <div class="bg-white p-2 rounded border border-indigo-100">
+          <p class="text-xs text-gray-500 font-semibold">🌤️ দুপুর</p>
+          <h4 id="todayLunchCount" class="text-lg font-bold text-indigo-600">0</h4>
+        </div>
+        <div class="bg-white p-2 rounded border border-indigo-100">
+          <p class="text-xs text-gray-500 font-semibold">🌙 রাত</p>
+          <h4 id="todayDinnerCount" class="text-lg font-bold text-indigo-600">0</h4>
+        </div>
+      </div>
+
+      <!-- Daily Meal Details Sub-panel -->
+      <div id="dailyDetailsPanel" class="mt-4 pt-3 border-t hidden">
+        <h4 class="font-bold text-sm text-gray-700 mb-2">নির্দিষ্ট তারিখের সদস্যভিত্তিক মিল তালিকা:</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border border-gray-200 text-xs bg-white">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border p-2">নাম</th>
+                <th class="border p-2 text-center">সকাল</th>
+                <th class="border p-2 text-center">দুপুর</th>
+                <th class="border p-2 text-center">রাত</th>
+                <th class="border p-2 text-center">মোট</th>
+                <th class="border p-2 text-center">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="dailyDetailsTableBody">
+              <!-- Dynamic Daily Data -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Member Profile Form -->
+    <div class="bg-white p-5 rounded-lg shadow mb-6">
+      <h3 class="font-bold text-md mb-2 text-gray-700">👤 আমার প্রোফাইল তথ্য (ঐচ্ছিক)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">পূর্ণ নাম:</label>
+          <input type="text" id="profFullName" placeholder="আপনার পুরো নাম" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">ফোন নম্বর:</label>
+          <input type="text" id="profPhone" placeholder="017XXXXXXXX" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">ফেসবুক প্রোফাইল লিংক:</label>
+          <input type="url" id="profFb" placeholder="https://facebook.com/yourid" class="border p-2 rounded w-full">
+        </div>
+      </div>
+      <button onclick="saveProfile()" class="bg-purple-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-purple-700">তথ্য সেভ করুন</button>
+    </div>
+
+    <!-- Admin Controls Section -->
+    <div id="adminPanel" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded shadow hidden">
+      <h3 class="font-bold text-lg mb-2 text-yellow-800">⚙️ অ্যাডমিন কন্ট্রোল প্যানেল</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <!-- Add Bazar -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm">বাজার খরচ যোগ করুন</h4>
+          <div class="flex gap-2">
+            <input type="number" id="bazarAmount" placeholder="টাকা" class="border p-2 rounded w-full">
+            <button onclick="addBazar()" class="bg-green-600 text-white px-3 py-2 rounded font-bold text-sm hover:bg-green-700">যোগ</button>
+          </div>
+        </div>
+        <!-- Add Fixed Bill -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm">ফিক্সড বিল (ভাড়া, বিদ্যুৎ বিল, গ্যাস বিল, বুয়া বিল) যোগ করুন</h4>
+          <div class="flex gap-1">
+            <input type="text" id="billName" placeholder="নাম" class="border p-2 rounded w-1/2 text-xs">
+            <input type="number" id="billAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
+            <button onclick="addFixedBill()" class="bg-purple-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
+          </div>
+        </div>
+        <!-- Member Deposit Input -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm">সদস্যের টাকা জমা নিন</h4>
+          <div class="flex gap-1">
+            <input type="text" id="depositMemberName" placeholder="সদস্যের নাম" class="border p-2 rounded w-1/2 text-xs">
+            <input type="number" id="depositAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
+            <button onclick="addMemberDeposit()" class="bg-blue-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-blue-700">জমা</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset All Button -->
+      <button onclick="resetAllData()" class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700 w-full shadow text-sm">⚠️ চলতি মাসের সকল হিসাব রিসেট করুন (নাম সংরক্ষিত থাকবে)</button>
+    </div>
+
+    <!-- Daily Meal Input Form (Advance Allowed) -->
+    <div class="bg-white p-5 rounded-lg shadow mb-6">
+      <h3 class="font-bold text-lg mb-3">🍽️ দৈনিক / অগ্রিম মিল ভুক্তি</h3>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <div>
+          <label class="block text-sm font-medium mb-1">তারিখ (আজকে বা অগ্রিম)</label>
+          <input type="date" id="mealDate" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">সদস্যের নাম</label>
+          <input type="text" id="memberNameInput" placeholder="আপনার নাম" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">সকাল (0.5)</label>
+          <input type="number" id="breakfastCount" value="1" min="0" step="0.5" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">দুপুর (1.0)</label>
+          <input type="number" id="lunchCount" value="1" min="0" step="1" class="border p-2 rounded w-full">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">রাত (0.5)</label>
+          <input type="number" id="dinnerCount" value="1" min="0" step="0.5" class="border p-2 rounded w-full">
+        </div>
+      </div>
+      <button onclick="submitMeal()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded font-bold w-full md:w-auto hover:bg-blue-700">মিল এন্ট্রি দিন</button>
+    </div>
+
+    <!-- Statement Area -->
+    <div id="pdfContent" class="bg-white p-6 rounded-lg shadow">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b">
+        <div>
+          <h3 class="font-bold text-xl text-gray-800">📊 মেস হিসাব বিবরণী</h3>
+          <p class="text-sm text-gray-600">মাস: <span id="pdfMonth" class="font-semibold text-blue-600">আগস্ট</span>, বছর: <span id="pdfYear" class="font-semibold text-blue-600">২০২৬</span></p>
+        </div>
+        <button onclick="previewPDF()" class="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold shadow hover:bg-red-700">📄 PDF প্রিভিউ ও ডাউনলোড</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse border border-gray-200 text-sm min-w-[650px]">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700">
+              <th class="border p-2">সদস্যের নাম</th>
+              <th class="border p-2 text-center">মোট মিল</th>
+              <th class="border p-2 text-right">মিল খরচ</th>
+              <th class="border p-2 text-right">ফিক্সড বিল</th>
+              <th class="border p-2 text-right font-bold">মোট বিল</th>
+              <th class="border p-2 text-right text-blue-600 font-bold">জমা (চলতি + জের)</th>
+              <th class="border p-2 text-right font-bold">অবশিষ্ট অবস্থা</th>
+              <th class="border p-2 text-center">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody">
+            <!-- Dynamic Data -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Profile View Modal -->
+  <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white p-6 rounded-lg max-w-md w-full shadow-lg relative">
+      <h3 class="font-bold text-lg border-b pb-2 mb-3">👤 সদস্যের প্রোফাইল বিবরণী</h3>
+      <div id="modalDetails" class="space-y-3 text-sm"></div>
+      <div class="mt-4 flex justify-between">
+        <button id="adminDeleteDetailsBtn" onclick="deleteProfileDetails()" class="bg-red-600 text-white px-3 py-1 rounded text-xs hidden">তথ্য মুছুন (অ্যাডমিন)</button>
+        <button onclick="closeModal('profileModal')" class="bg-gray-500 text-white px-4 py-1.5 rounded text-xs ml-auto">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Preview Modal -->
+  <div id="pdfPreviewModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-2 md:p-6">
+    <div class="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl relative">
+      <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+        <h3 class="font-bold text-md text-gray-800">📄 মেস হিসাব বিবরণী (PDF প্রিভিউ)</h3>
+        <div class="flex gap-2">
+          <button id="downloadPdfBtn" class="bg-green-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-green-700">ডাউনলোড করুন</button>
+          <button onclick="closeModal('pdfPreviewModal')" class="bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-600">বন্ধ করুন</button>
+        </div>
+      </div>
+      <div class="flex-grow p-2 bg-gray-200 overflow-hidden">
+        <iframe id="pdfFrame" class="w-full h-full border-0 rounded bg-white"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Edit Meal Modal -->
+  <div id="editMealModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white p-5 rounded-lg max-w-sm w-full shadow-lg relative">
+      <h3 class="font-bold text-md border-b pb-2 mb-3">✏️ সদস্যের মোট মিল ইডিট করুন</h3>
+      <p class="text-xs text-gray-600 mb-2">সদস্য: <span id="editMemberName" class="font-bold text-blue-600"></span></p>
+      <div>
+        <label class="block text-xs font-semibold mb-1">সংশোধিত মোট মিল সংখ্যা:</label>
+        <input type="number" id="editMealInput" step="0.5" min="0" class="border p-2 rounded w-full text-sm">
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="saveAdminMealEdit()" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold">সেভ করুন</button>
+        <button onclick="closeModal('editMealModal')" class="bg-gray-400 text-white px-3 py-1.5 rounded text-xs">বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Edit Daily Meal Modal -->
+  <div id="editDailyMealModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white p-5 rounded-lg max-w-sm w-full shadow-lg relative">
+      <h3 class="font-bold text-md border-b pb-2 mb-3">✏️ দৈনিক মিল ইডিট (অ্যাডমিন)</h3>
+      <p class="text-xs text-gray-600 mb-2">সদস্য: <span id="editDailyMemberName" class="font-bold text-blue-600"></span></p>
+      <div class="space-y-2">
+        <div>
+          <label class="block text-xs font-semibold">সকাল (0.5):</label>
+          <input type="number" id="editDailyBf" step="0.5" min="0" class="border p-1.5 rounded w-full text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold">দুপুর (1.0):</label>
+          <input type="number" id="editDailyLunch" step="1" min="0" class="border p-1.5 rounded w-full text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold">রাত (0.5):</label>
+          <input type="number" id="editDailyDinner" step="0.5" min="0" class="border p-1.5 rounded w-full text-xs">
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="saveDailyMealEdit()" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-xs font-bold">আপডেট করুন</button>
+        <button onclick="closeModal('editDailyMealModal')" class="bg-gray-400 text-white px-3 py-1.5 rounded text-xs">বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-YmJUyQpGBClyBi5aYFyOZattjftoc4Q",
+      authDomain: "mess-26a9c.firebaseapp.com",
+      projectId: "mess-26a9c",
+      storageBucket: "mess-26a9c.appspot.com",
+      messagingSenderId: "569474450745",
+      appId: "1:569474450745:web:db36781c0d78d7fbb94e",
+      measurementId: "G-1HPYXE6H1H"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // লোকাল (বাংলাদেশ) টাইমজোন অনুযায়ী সঠিক YYYY-MM-DD তারিখ নেওয়ার কোড
+    const localNow = new Date();
+    const localYear = localNow.getFullYear();
+    const localMonth = String(localNow.getMonth() + 1).padStart(2, '0');
+    const localDay = String(localNow.getDate()).padStart(2, '0');
+    const todayStr = `${localYear}-${localMonth}-${localDay}`;
+
+    document.getElementById('mealDate').value = todayStr;
+    document.getElementById('summaryViewDate').value = todayStr;
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveDateTime').innerText = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    let currentUser = null;
+    let isAdmin = false;
+    let activeData = [];
+    let currentViewingMember = null;
+    let editingMemberIndex = null;
+    let editingDailyRecord = null;
+    let pdfBlobUrl = null;
+
+    function toggleAuthMode(mode) {
+      if(mode === 'login') {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('tabLoginBtn').className = "w-1/2 py-2 font-bold text-blue-600 border-b-2 border-blue-600";
+        document.getElementById('tabRegisterBtn').className = "w-1/2 py-2 font-bold text-gray-500";
+      } else {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('tabRegisterBtn').className = "w-1/2 py-2 font-bold text-green-600 border-b-2 border-green-600";
+        document.getElementById('tabLoginBtn').className = "w-1/2 py-2 font-bold text-gray-500";
+      }
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('userInfo').classList.remove('hidden');
+
+        if (user.email === "admin@mess.com" || user.email === "sohansp543@gmail.com") {
+          isAdmin = true;
+          document.getElementById('userBadge').innerText = "অ্যাডমিন";
+          document.getElementById('userBadge').className = "bg-yellow-600 px-3 py-1 rounded font-semibold text-xs";
+          document.getElementById('adminPanel').classList.remove('hidden');
+        } else {
+          isAdmin = false;
+          document.getElementById('userBadge').innerText = user.displayName || "সদস্য";
+          document.getElementById('adminPanel').classList.add('hidden');
+        }
+
+        if(user.displayName) {
+          document.getElementById('memberNameInput').value = user.displayName;
+          loadUserProfile(user.displayName);
+
+          // ইউজার লগইন হওয়ার পরে মেস বিবরণীর তালিকায় নাম স্বয়ংক্রিয়ভাবে সিংক হওয়া
+          syncUserToCurrentMonth(user.displayName);
+        }
+
+        loadDashboardData();
+        loadDailySummary();
+      } else {
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('dashboardSection').classList.add('hidden');
+        document.getElementById('userInfo').classList.add('hidden');
+      }
+    });
+
+    // ডিলিট হওয়া সদস্য পুনরায় লগইন করলে চলতি মাসের তালিকায় অটো-যুক্ত হওয়ার লজিক
+    function syncUserToCurrentMonth(name) {
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      docRef.get().then(doc => {
+        let members = doc.exists ? (doc.data().members || []) : [];
+        let exists = members.some(m => m.name === name);
+
+        if (!exists) {
+          members.push({ name: name, meals: 0, deposit: 0, prevBalance: 0 });
+          docRef.set({ members: members }, { merge: true });
+        }
+      });
+    }
+
+    function login() {
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      if(!email || !pass) return alert("ইমেইল ও পাসওয়ার্ড প্রদান করুন");
+      auth.signInWithEmailAndPassword(email, pass).catch(err => alert("লগইন ব্যর্থ: " + err.message));
+    }
+
+    function register() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pass = document.getElementById('regPassword').value;
+
+      if(!name || !email || !pass) return alert("সবগুলো তথ্য সঠিকভাব দিন!");
+
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(userCredential => userCredential.user.updateProfile({ displayName: name }))
+        .then(() => {
+          const month = document.getElementById('selectMonth').value;
+          const year = document.getElementById('selectYear').value;
+          const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+          
+          return docRef.get().then(doc => {
+            let members = doc.exists ? (doc.data().members || []) : [];
+            if (!members.find(m => m.name === name)) {
+              members.push({ name: name, meals: 0, deposit: 0, prevBalance: 0 });
+              return docRef.set({ members: members }, { merge: true });
+            }
+          });
+        })
+        .then(() => {
+          alert("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!");
+          location.reload();
+        })
+        .catch(err => alert("অ্যাকাউন্ট খুলতে সমস্যা হয়েছে: " + err.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    function saveProfile() {
+      if(!currentUser) return;
+      const name = document.getElementById('memberNameInput').value.trim() || currentUser.displayName;
+      const fullName = document.getElementById('profFullName').value.trim();
+      const phone = document.getElementById('profPhone').value.trim();
+      const fbLink = document.getElementById('profFb').value.trim();
+
+      db.collection('user_profiles').doc(name).set({
+        fullName, phone, fbLink, updatedAt: new Date()
+      }, { merge: true }).then(() => alert("প্রোফাইল তথ্য সফলভাবে সেভ হয়েছে!"));
+    }
+
+    function loadUserProfile(name) {
+      db.collection('user_profiles').doc(name).get().then(doc => {
+        if(doc.exists) {
+          const d = doc.data();
+          document.getElementById('profFullName').value = d.fullName || '';
+          document.getElementById('profPhone').value = d.phone || '';
+          document.getElementById('profFb').value = d.fbLink || '';
+        }
+      });
+    }
+
+    function viewProfile(name) {
+      currentViewingMember = name;
+      db.collection('user_profiles').doc(name).get().then(doc => {
+        const details = document.getElementById('modalDetails');
+        if(doc.exists) {
+          const d = doc.data();
+          details.innerHTML = `
+            <p><strong>পূর্ণ নাম:</strong> ${d.fullName || name}</p>
+            <p><strong>ফোন নম্বর:</strong> ${d.phone ? `<a href="tel:${d.phone}" class="text-blue-600 underline">${d.phone}</a>` : 'দেওয়া হয়নি'}</p>
+            <p><strong>ফেসবুক প্রোফাইল:</strong> ${d.fbLink ? `<a href="${d.fbLink}" target="_blank" class="text-blue-600 underline font-semibold">প্রোফাইল দেখুন ↗</a>` : 'দেওয়া হয়নি'}</p>
+          `;
+        } else {
+          details.innerHTML = `<p class="text-gray-500">এই সদস্যের কোনো প্রোফাইল তথ্য পাওয়া যায়নি।</p>`;
+        }
+
+        if(isAdmin) {
+          document.getElementById('adminDeleteDetailsBtn').classList.remove('hidden');
+        } else {
+          document.getElementById('adminDeleteDetailsBtn').classList.add('hidden');
+        }
+
+        document.getElementById('profileModal').classList.remove('hidden');
+      });
+    }
+
+    function deleteProfileDetails() {
+      if(!isAdmin || !currentViewingMember) return;
+      if(confirm("অ্যাডমিন হিসেবে এই সদস্যের প্রোফাইল তথ্য মুছে দিতে চান?")) {
+        db.collection('user_profiles').doc(currentViewingMember).delete().then(() => {
+          alert("তথ্য মুছে দেওয়া হয়েছে।");
+          closeModal('profileModal');
+        });
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function loadDashboardData() {
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      document.getElementById('pdfMonth').innerText = month;
+      document.getElementById('pdfYear').innerText = year;
+
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      docRef.onSnapshot(doc => {
+        if (doc.exists) {
+          activeData = doc.data();
+          renderUI(activeData);
+        } else {
+          // রেজিস্টার্ড মেম্বারদের দিয়ে নতুন মাস শুরু করা (জের সহ)
+          db.collection('user_profiles').get().then(userSnap => {
+            let initialMembers = [];
+            userSnap.forEach(uDoc => {
+              initialMembers.push({ name: uDoc.id, meals: 0, deposit: 0, prevBalance: 0 });
+            });
+            activeData = { totalBazar: 0, totalFixedBills: 0, members: initialMembers };
+            docRef.set(activeData);
+          });
+        }
+      });
+    }
+
+    function renderUI(data) {
+      const members = data.members || [];
+      const totalBazar = data.totalBazar || 0;
+      const totalFixedBills = data.totalFixedBills || 0;
+
+      const totalMeals = members.reduce((sum, m) => sum + (m.meals || 0), 0);
+      const mealRate = totalMeals > 0 ? (totalBazar / totalMeals) : 0;
+      const fixedPerHead = members.length > 0 ? (totalFixedBills / members.length) : 0;
+
+      document.getElementById('totalMessMeals').innerText = totalMeals.toFixed(1);
+      document.getElementById('totalMessBazar').innerText = `৳ ${totalBazar}`;
+      document.getElementById('currentMealRate').innerText = `৳ ${mealRate.toFixed(2)}`;
+      document.getElementById('fixedBillPerHead').innerText = `৳ ${fixedPerHead.toFixed(0)}`;
+
+      const tbody = document.getElementById('memberTableBody');
+      tbody.innerHTML = '';
+
+      members.forEach((m, index) => {
+        const mealCost = (m.meals || 0) * mealRate;
+        const totalBill = mealCost + fixedPerHead;
+        const currentDeposit = m.deposit || 0;
+        const prevBal = m.prevBalance || 0; 
+        const totalEffectiveDeposit = currentDeposit + prevBal; // জের সহ জমার পরিমাণ
+        const balance = totalEffectiveDeposit - totalBill;
+
+        let statusHTML = balance < 0 
+          ? `<span class="text-red-600 font-bold">বকেয়া ৳ ${Math.abs(balance).toFixed(1)}</span>`
+          : `<span class="text-green-600 font-bold">জমা ৳ ${balance.toFixed(1)}</span>`;
+
+        let depositText = `৳ ${currentDeposit}`;
+        if(prevBal !== 0) {
+          depositText += prevBal > 0 ? ` <span class="text-xs text-green-600">(+${prevBal})</span>` : ` <span class="text-xs text-red-600">(${prevBal})</span>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-gray-50 member-row";
+        tr.setAttribute('data-name', m.name);
+        tr.innerHTML = `
+          <td class="border p-2 font-semibold text-blue-600 cursor-pointer underline" onclick="viewProfile('${m.name}')">${m.name}</td>
+          <td class="border p-2 text-center font-bold text-blue-600">${(m.meals || 0).toFixed(1)}</td>
+          <td class="border p-2 text-right">৳ ${mealCost.toFixed(2)}</td>
+          <td class="border p-2 text-right">৳ ${fixedPerHead.toFixed(0)}</td>
+          <td class="border p-2 text-right font-bold text-gray-800">৳ ${totalBill.toFixed(2)}</td>
+          <td class="border p-2 text-right text-blue-600 font-bold">${depositText}</td>
+          <td class="border p-2 text-right">${statusHTML}</td>
+          <td class="border p-2 text-center flex gap-1 justify-center">
+            <button onclick="viewProfile('${m.name}')" class="bg-blue-500 text-white text-xs px-2 py-1 rounded">প্রোফাইল</button>
+            ${isAdmin ? `<button onclick="openAdminMealEdit(${index}, '${m.name}', ${m.meals || 0})" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">ইডিট</button>
+            <button onclick="deleteMember(${index})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ডিলিট</button>` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterMembers() {
+      const q = document.getElementById('searchMember').value.toLowerCase();
+      const rows = document.querySelectorAll('.member-row');
+      rows.forEach(r => {
+        const name = r.getAttribute('data-name').toLowerCase();
+        r.style.display = name.includes(q) ? '' : 'none';
+      });
+    }
+
+    function submitMeal() {
+      const name = document.getElementById('memberNameInput').value.trim();
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      const dateStr = document.getElementById('mealDate').value;
+
+      if (!name || !dateStr) return alert("অনুগ্রহ করে আপনার নাম ও তারিখ লিখুন!");
+
+      const bf = parseFloat(document.getElementById('breakfastCount').value) || 0;
+      const lunch = parseFloat(document.getElementById('lunchCount').value) || 0;
+      const dinner = parseFloat(document.getElementById('dinnerCount').value) || 0;
+      const added = (bf * 0.5) + (lunch * 1.0) + (dinner * 0.5);
+
+      const dailyDocRef = db.collection('daily_meals').doc(`${dateStr}_${name}`);
+
+      dailyDocRef.get().then(dailyDoc => {
+        let prevAdded = 0;
+        if(dailyDoc.exists) {
+          const d = dailyDoc.data();
+          prevAdded = ((d.bf || 0) * 0.5) + ((d.lunch || 0) * 1.0) + ((d.dinner || 0) * 0.5);
+        }
+
+        const diff = added - prevAdded;
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+        return docRef.get().then(doc => {
+          let members = doc.exists ? (doc.data().members || []) : [];
+          let member = members.find(m => m.name === name);
+
+          if (member) {
+            member.meals = Math.max(0, (member.meals || 0) + diff);
+          } else {
+            members.push({ name: name, meals: Math.max(0, added), deposit: 0, prevBalance: 0 });
+          }
+
+          return docRef.set({ members: members }, { merge: true });
+        }).then(() => {
+          return dailyDocRef.set({ name, date: dateStr, bf, lunch, dinner });
+        });
+      }).then(() => {
+        alert(`${name}-এর নামে ${dateStr} তারিখে ${added} মিল এন্ট্রি করা হয়েছে।`);
+        loadDailySummary();
+      });
+    }
+
+    function loadDailySummary() {
+      const selectedDate = document.getElementById('summaryViewDate').value;
+      db.collection('daily_meals').where('date', '==', selectedDate).get().then(snapshot => {
+        let totBf = 0, totLunch = 0, totDinner = 0;
+        const tbody = document.getElementById('dailyDetailsTableBody');
+        tbody.innerHTML = '';
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const docId = doc.id;
+          totBf += (d.bf || 0);
+          totLunch += (d.lunch || 0);
+          totDinner += (d.dinner || 0);
+
+          const memberTotal = ((d.bf || 0) * 0.5) + ((d.lunch || 0) * 1.0) + ((d.dinner || 0) * 0.5);
+
+          const tr = document.createElement('tr');
+          tr.className = "border-b";
+          tr.innerHTML = `
+            <td class="border p-1.5 font-semibold">${d.name}</td>
+            <td class="border p-1.5 text-center">${d.bf || 0}</td>
+            <td class="border p-1.5 text-center">${d.lunch || 0}</td>
+            <td class="border p-1.5 text-center">${d.dinner || 0}</td>
+            <td class="border p-1.5 text-center font-bold text-blue-600">${memberTotal.toFixed(1)}</td>
+            <td class="border p-1.5 text-center">
+              ${isAdmin ? `<button onclick="openDailyEditModal('${docId}', '${d.name}', ${d.bf || 0}, ${d.lunch || 0}, ${d.dinner || 0})" class="bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded">ইডিট</button>` : '-'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById('todayBfCount').innerText = totBf;
+        document.getElementById('todayLunchCount').innerText = totLunch;
+        document.getElementById('todayDinnerCount').innerText = totDinner;
+      });
+    }
+
+    function toggleDailyDetails() {
+      const p = document.getElementById('dailyDetailsPanel');
+      p.classList.toggle('hidden');
+    }
+
+    function openDailyEditModal(docId, name, bf, lunch, dinner) {
+      editingDailyRecord = { docId, name, oldBf: bf, oldLunch: lunch, oldDinner: dinner };
+      document.getElementById('editDailyMemberName').innerText = name;
+      document.getElementById('editDailyBf').value = bf;
+      document.getElementById('editDailyLunch').value = lunch;
+      document.getElementById('editDailyDinner').value = dinner;
+      document.getElementById('editDailyMealModal').classList.remove('hidden');
+    }
+
+    function saveDailyMealEdit() {
+      if(!isAdmin || !editingDailyRecord) return;
+      const newBf = parseFloat(document.getElementById('editDailyBf').value) || 0;
+      const newLunch = parseFloat(document.getElementById('editDailyLunch').value) || 0;
+      const newDinner = parseFloat(document.getElementById('editDailyDinner').value) || 0;
+
+      const oldTotal = (editingDailyRecord.oldBf * 0.5) + (editingDailyRecord.oldLunch * 1.0) + (editingDailyRecord.oldDinner * 0.5);
+      const newTotal = (newBf * 0.5) + (newLunch * 1.0) + (newDinner * 0.5);
+      const diff = newTotal - oldTotal;
+
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      db.collection('daily_meals').doc(editingDailyRecord.docId).update({
+        bf: newBf, lunch: newLunch, dinner: newDinner
+      }).then(() => {
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+        return docRef.get().then(doc => {
+          if(doc.exists) {
+            let members = doc.data().members || [];
+            let member = members.find(m => m.name === editingDailyRecord.name);
+            if(member) {
+              member.meals = Math.max(0, (member.meals || 0) + diff);
+              return docRef.set({ members }, { merge: true });
+            }
+          }
+        });
+      }).then(() => {
+        alert("দৈনিক মিল সফলভাবে আপডেট হয়েছে!");
+        closeModal('editDailyMealModal');
+        loadDailySummary();
+      });
+    }
+
+    function openAdminMealEdit(index, name, currentMeals) {
+      editingMemberIndex = index;
+      document.getElementById('editMemberName').innerText = name;
+      document.getElementById('editMealInput').value = currentMeals;
+      document.getElementById('editMealModal').classList.remove('hidden');
+    }
+
+    function saveAdminMealEdit() {
+      if (!isAdmin || editingMemberIndex === null) return;
+      const newMeals = parseFloat(document.getElementById('editMealInput').value);
+      if (isNaN(newMeals) || newMeals < 0) return alert("সঠিক মিল সংখ্যা দিন!");
+
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      docRef.get().then(doc => {
+        let members = doc.data().members || [];
+        members[editingMemberIndex].meals = newMeals;
+        return docRef.set({ members: members }, { merge: true });
+      }).then(() => {
+        alert("সদস্যের মোট মিল সংখ্যা সংশোধন করা হয়েছে।");
+        closeModal('editMealModal');
+      });
+    }
+
+    function resetAllData() {
+      if (!isAdmin) return;
+      if (confirm("আপনি কি নিশ্চিত যে এই মাসের সকল মিল, বাজার খরচ ও ফিক্সড বিল রিসেট করতে চান?\n\n(নোট: সদস্যদের নাম সুরক্ষিত থাকবে এবং বর্তমান জের নতুন মাসে সংরক্ষিত থাকবে)")) {
+        const month = document.getElementById('selectMonth').value;
+        const year = document.getElementById('selectYear').value;
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+        docRef.get().then(doc => {
+          if (!doc.exists) return;
+          const data = doc.data();
+          const members = data.members || [];
+          const totalBazar = data.totalBazar || 0;
+          const totalFixedBills = data.totalFixedBills || 0;
+          const totalMeals = members.reduce((sum, m) => sum + (m.meals || 0), 0);
+          const mealRate = totalMeals > 0 ? (totalBazar / totalMeals) : 0;
+          const fixedPerHead = members.length > 0 ? (totalFixedBills / members.length) : 0;
+
+          // মেম্বারদের নাম ও জের ঠিক রেখে মিল ও চলতি জমা ০ করে দেওয়া
+          const resetMembers = members.map(m => {
+            const mealCost = (m.meals || 0) * mealRate;
+            const totalBill = mealCost + fixedPerHead;
+            const totalEffectiveDeposit = (m.deposit || 0) + (m.prevBalance || 0);
+            const finalBalance = totalEffectiveDeposit - totalBill;
+
+            return {
+              name: m.name,
+              meals: 0,
+              deposit: 0,
+              prevBalance: parseFloat(finalBalance.toFixed(2)) // জের পরবর্তী হিসাবের জন্য সেভ হলো
+            };
+          });
+
+          return docRef.set({
+            totalBazar: 0,
+            totalFixedBills: 0,
+            members: resetMembers
+          });
+        }).then(() => alert("চলতি মাসের হিসাব রিসেট করা হয়েছে। সদস্যদের তালিকা ও আগের জের অক্ষুণ্ণ আছে।"));
+      }
+    }
+
+    function addMemberDeposit() {
+      if (!isAdmin) return;
+      const name = document.getElementById('depositMemberName').value.trim();
+      const amount = parseFloat(document.getElementById('depositAmount').value);
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      if (!name || isNaN(amount) || amount <= 0) return alert("সঠিক নাম ও জমার পরিমাণ দিন!");
+
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      docRef.get().then(doc => {
+        let members = doc.exists ? (doc.data().members || []) : [];
+        let member = members.find(m => m.name === name);
+
+        if (member) {
+          member.deposit = (member.deposit || 0) + amount;
+        } else {
+          members.push({ name: name, meals: 0, deposit: amount, prevBalance: 0 });
+        }
+
+        return docRef.set({ members: members }, { merge: true });
+      }).then(() => {
+        alert(`${name}-এর নামে ৳ ${amount} জমা করা হয়েছে।`);
+        document.getElementById('depositMemberName').value = '';
+        document.getElementById('depositAmount').value = '';
+      });
+    }
+
+    function addBazar() {
+      if (!isAdmin) return;
+      const amount = parseFloat(document.getElementById('bazarAmount').value);
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      if (amount > 0) {
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+        docRef.get().then(doc => {
+          const current = doc.exists ? (doc.data().totalBazar || 0) : 0;
+          docRef.set({ totalBazar: current + amount }, { merge: true });
+          document.getElementById('bazarAmount').value = '';
+        });
+      }
+    }
+
+    function addFixedBill() {
+      if (!isAdmin) return;
+      const amount = parseFloat(document.getElementById('billAmount').value);
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      if (amount > 0) {
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+        docRef.get().then(doc => {
+          const current = doc.exists ? (doc.data().totalFixedBills || 0) : 0;
+          docRef.set({ totalFixedBills: current + amount }, { merge: true });
+          document.getElementById('billAmount').value = '';
+          document.getElementById('billName').value = '';
+        });
+      }
+    }
+
+    function deleteMember(index) {
+      if (!isAdmin) return;
+      if (confirm("আপনি কি নিশ্চিত যে এই সদস্যকে চলতি মাসের মেস তালিকা থেকে বাদ দিতে চান?")) {
+        const month = document.getElementById('selectMonth').value;
+        const year = document.getElementById('selectYear').value;
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+        docRef.get().then(doc => {
+          let members = doc.data().members || [];
+          members.splice(index, 1);
+          return docRef.set({ members: members }, { merge: true });
+        }).then(() => alert("সদস্যকে মেস তালিকা থেকে বাদ দেওয়া হয়েছে।"));
+      }
+    }
+
+    function previewPDF() {
+      const element = document.getElementById('pdfContent');
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      const actionBtns = element.querySelectorAll('button');
+      const actionCells = element.querySelectorAll('th:last-child, td:last-child');
+
+      actionBtns.forEach(btn => btn.style.display = 'none');
+      actionCells.forEach(cell => cell.style.display = 'none');
+
+      const opt = {
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: `Mess_Statement_${month}_${year}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
+        actionBtns.forEach(btn => btn.style.display = '');
+        actionCells.forEach(cell => cell.style.display = '');
+
+        const blob = pdf.output('blob');
+
+        if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+        pdfBlobUrl = URL.createObjectURL(blob);
+
+        const pdfFrame = document.getElementById('pdfFrame');
+        pdfFrame.src = pdfBlobUrl;
+
+        document.getElementById('downloadPdfBtn').onclick = function() {
+          const a = document.createElement('a');
+          a.href = pdfBlobUrl;
+          a.download = `Mess_Statement_${month}_${year}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+
+        document.getElementById('pdfPreviewModal').classList.remove('hidden');
+      }).catch(function(err) {
+        actionBtns.forEach(btn => btn.style.display = '');
+        actionCells.forEach(cell => cell.style.display = '');
+        alert("PDF তৈরিতে সমস্যা হয়েছে: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>
