@@ -45,6 +45,9 @@
           <label class="block text-sm font-medium mb-1">পাসওয়ার্ড</label>
           <input type="password" id="loginPassword" placeholder="******" class="border p-2 rounded w-full">
         </div>
+        <div class="text-right">
+          <button onclick="forgotPassword()" class="text-xs text-blue-600 hover:underline">পাসওয়ার্ড ভুলে গেছেন?</button>
+        </div>
         <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">লগইন</button>
       </div>
 
@@ -103,7 +106,7 @@
     <!-- Top Summary Dashboard -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-blue-500">
-        <p class="text-gray-500 text-sm"> সর্বমোট মিল</p>
+        <p class="text-gray-500 text-sm">সর্বমোট মিল</p>
         <h2 id="totalMessMeals" class="text-2xl font-bold text-blue-600">0.0</h2>
       </div>
       <div class="bg-white p-4 rounded-lg shadow text-center border-t-4 border-green-500">
@@ -190,31 +193,63 @@
     <!-- Admin Controls Section -->
     <div id="adminPanel" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded shadow hidden">
       <h3 class="font-bold text-lg mb-2 text-yellow-800">⚙️ অ্যাডমিন কন্ট্রোল প্যানেল</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <!-- Add Bazar -->
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Add Bazar (তারিখ, পরিমান, তথ্য) -->
         <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm">বাজার খরচ যোগ করুন</h4>
-          <div class="flex gap-2">
-            <input type="number" id="bazarAmount" placeholder="টাকা" class="border p-2 rounded w-full">
-            <button onclick="addBazar()" class="bg-green-600 text-white px-3 py-2 rounded font-bold text-sm hover:bg-green-700">যোগ</button>
+          <h4 class="font-semibold mb-2 text-sm text-green-700">🛒 বাজার খরচ যোগ করুন</h4>
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <label class="block text-xs font-semibold">তারিখ:</label>
+              <input type="date" id="bazarDate" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">পরিমান:</label>
+              <input type="number" id="bazarAmount" placeholder="টাকা" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">তথ্য:</label>
+              <input type="text" id="bazarInfo" placeholder="বাজারের সাধারণ তথ্য" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <button onclick="addBazar()" class="bg-green-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-green-700 mt-1">বাজার যোগ করুন</button>
           </div>
         </div>
+
+        <!-- Member Deposit Input (Minus Supported) -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm text-blue-700">💵 সদস্যের টাকা জমা / বকেয়া এন্ট্রি</h4>
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <label class="block text-xs font-semibold">সদস্যের নাম:</label>
+              <input type="text" id="depositMemberName" placeholder="সদস্যের নাম" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">পরিমাণ (বকেয়া হলে মাইনাস - বসান):</label>
+              <input type="number" id="depositAmount" placeholder="যেমন: 500 অথবা -500" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <button onclick="addMemberDeposit()" class="bg-blue-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-700 mt-1">টাকা জমা / এন্ট্রি নিন</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <!-- Add Fixed Bill -->
         <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm">ফিক্সড বিল (ভাড়া, বিদ্যুৎ বিল, গ্যাস বিল, বুয়া বিল) যোগ করুন</h4>
+          <h4 class="font-semibold mb-2 text-sm text-purple-700">🏢 ফিক্সড বিল যোগ করুন</h4>
           <div class="flex gap-1">
-            <input type="text" id="billName" placeholder="নাম" class="border p-2 rounded w-1/2 text-xs">
+            <input type="text" id="billName" placeholder="নাম (ভাড়া, বিদ্যুৎ)" class="border p-2 rounded w-1/2 text-xs">
             <input type="number" id="billAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
-            <button onclick="addFixedBill()" class="bg-purple-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
+            <button onclick="addFixedBill()" class="bg-purple-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
           </div>
         </div>
-        <!-- Member Deposit Input -->
+
+        <!-- Store Due / মুদি দোকানের বাকীর হিসাব -->
         <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm">সদস্যের টাকা জমা নিন</h4>
+          <h4 class="font-semibold mb-2 text-sm text-orange-700">🏪 মুদি দোকান বাকীর হিসাব</h4>
           <div class="flex gap-1">
-            <input type="text" id="depositMemberName" placeholder="সদস্যের নাম" class="border p-2 rounded w-1/2 text-xs">
-            <input type="number" id="depositAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
-            <button onclick="addMemberDeposit()" class="bg-blue-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-blue-700">জমা</button>
+            <input type="text" id="storeName" placeholder="দোকানের নাম" class="border p-2 rounded w-1/3 text-xs">
+            <input type="number" id="storeDueAmount" placeholder="টাকা" class="border p-2 rounded w-1/3 text-xs">
+            <button onclick="addStoreDue()" class="bg-orange-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-orange-700">বাকি রেকর্ড</button>
           </div>
         </div>
       </div>
@@ -270,7 +305,7 @@
               <th class="border p-2 text-right">মিল খরচ</th>
               <th class="border p-2 text-right">ফিক্সড বিল</th>
               <th class="border p-2 text-right font-bold">মোট বিল</th>
-              <th class="border p-2 text-right text-blue-600 font-bold">জমা (চলতি + জের)</th>
+              <th class="border p-2 text-right font-bold">জমা (চলতি + জের)</th>
               <th class="border p-2 text-right font-bold">অবশিষ্ট অবস্থা</th>
               <th class="border p-2 text-center">অ্যাকশন</th>
             </tr>
@@ -369,7 +404,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // লোকাল (বাংলাদেশ) টাইমজোন অনুযায়ী সঠিক YYYY-MM-DD তারিখ নেওয়ার কোড
     const localNow = new Date();
     const localYear = localNow.getFullYear();
     const localMonth = String(localNow.getMonth() + 1).padStart(2, '0');
@@ -378,6 +412,7 @@
 
     document.getElementById('mealDate').value = todayStr;
     document.getElementById('summaryViewDate').value = todayStr;
+    document.getElementById('bazarDate').value = todayStr;
 
     function updateClock() {
       const now = new Date();
@@ -429,8 +464,6 @@
         if(user.displayName) {
           document.getElementById('memberNameInput').value = user.displayName;
           loadUserProfile(user.displayName);
-
-          // ইউজার লগইন হওয়ার পরে মেস বিবরণীর তালিকায় নাম স্বয়ংক্রিয়ভাবে সিংক হওয়া
           syncUserToCurrentMonth(user.displayName);
         }
 
@@ -443,7 +476,6 @@
       }
     });
 
-    // ডিলিট হওয়া সদস্য পুনরায় লগইন করলে চলতি মাসের তালিকায় অটো-যুক্ত হওয়ার লজিক
     function syncUserToCurrentMonth(name) {
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
@@ -465,6 +497,15 @@
       const pass = document.getElementById('loginPassword').value;
       if(!email || !pass) return alert("ইমেইল ও পাসওয়ার্ড প্রদান করুন");
       auth.signInWithEmailAndPassword(email, pass).catch(err => alert("লগইন ব্যর্থ: " + err.message));
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById('loginEmail').value.trim();
+      if(!email) return alert("পাসওয়ার্ড রিসেট করতে ইমেইল ফিল্ডে আপনার ইমেইলটি লিখুন!");
+      
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("আপনার ইমেইলে পাসওয়ার্ড রিসেট করার একটি লিংক পাঠানো হয়েছে।"))
+        .catch(err => alert("সমস্যা হয়েছে: " + err.message));
     }
 
     function register() {
@@ -576,7 +617,6 @@
           activeData = doc.data();
           renderUI(activeData);
         } else {
-          // রেজিস্টার্ড মেম্বারদের দিয়ে নতুন মাস শুরু করা (জের সহ)
           db.collection('user_profiles').get().then(userSnap => {
             let initialMembers = [];
             userSnap.forEach(uDoc => {
@@ -611,14 +651,17 @@
         const totalBill = mealCost + fixedPerHead;
         const currentDeposit = m.deposit || 0;
         const prevBal = m.prevBalance || 0; 
-        const totalEffectiveDeposit = currentDeposit + prevBal; // জের সহ জমার পরিমাণ
+        const totalEffectiveDeposit = currentDeposit + prevBal;
         const balance = totalEffectiveDeposit - totalBill;
 
         let statusHTML = balance < 0 
           ? `<span class="text-red-600 font-bold">বকেয়া ৳ ${Math.abs(balance).toFixed(1)}</span>`
           : `<span class="text-green-600 font-bold">জমা ৳ ${balance.toFixed(1)}</span>`;
 
-        let depositText = `৳ ${currentDeposit}`;
+        // জমার পরিমাণ মাইনাস ফিগার হলে লাল রঙ করার লজিক
+        let depositClass = totalEffectiveDeposit < 0 ? "text-red-600 font-bold" : "text-blue-600 font-bold";
+        let depositText = `<span class="${depositClass}">৳ ${currentDeposit}</span>`;
+        
         if(prevBal !== 0) {
           depositText += prevBal > 0 ? ` <span class="text-xs text-green-600">(+${prevBal})</span>` : ` <span class="text-xs text-red-600">(${prevBal})</span>`;
         }
@@ -632,7 +675,7 @@
           <td class="border p-2 text-right">৳ ${mealCost.toFixed(2)}</td>
           <td class="border p-2 text-right">৳ ${fixedPerHead.toFixed(0)}</td>
           <td class="border p-2 text-right font-bold text-gray-800">৳ ${totalBill.toFixed(2)}</td>
-          <td class="border p-2 text-right text-blue-600 font-bold">${depositText}</td>
+          <td class="border p-2 text-right">${depositText}</td>
           <td class="border p-2 text-right">${statusHTML}</td>
           <td class="border p-2 text-center flex gap-1 justify-center">
             <button onclick="viewProfile('${m.name}')" class="bg-blue-500 text-white text-xs px-2 py-1 rounded">প্রোফাইল</button>
@@ -826,7 +869,6 @@
           const mealRate = totalMeals > 0 ? (totalBazar / totalMeals) : 0;
           const fixedPerHead = members.length > 0 ? (totalFixedBills / members.length) : 0;
 
-          // মেম্বারদের নাম ও জের ঠিক রেখে মিল ও চলতি জমা ০ করে দেওয়া
           const resetMembers = members.map(m => {
             const mealCost = (m.meals || 0) * mealRate;
             const totalBill = mealCost + fixedPerHead;
@@ -837,7 +879,7 @@
               name: m.name,
               meals: 0,
               deposit: 0,
-              prevBalance: parseFloat(finalBalance.toFixed(2)) // জের পরবর্তী হিসাবের জন্য সেভ হলো
+              prevBalance: parseFloat(finalBalance.toFixed(2))
             };
           });
 
@@ -850,6 +892,7 @@
       }
     }
 
+    // সদস্যের টাকা জমা / বকেয়া ইনপুট (মাইনাস ফিগার সাপোর্টেড)
     function addMemberDeposit() {
       if (!isAdmin) return;
       const name = document.getElementById('depositMemberName').value.trim();
@@ -857,7 +900,7 @@
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
 
-      if (!name || isNaN(amount) || amount <= 0) return alert("সঠিক নাম ও জমার পরিমাণ দিন!");
+      if (!name || isNaN(amount)) return alert("সঠিক নাম ও জমার পরিমাণ প্রদান করুন!");
 
       const docRef = db.collection('mess_data').doc(`${year}_${month}`);
 
@@ -873,26 +916,40 @@
 
         return docRef.set({ members: members }, { merge: true });
       }).then(() => {
-        alert(`${name}-এর নামে ৳ ${amount} জমা করা হয়েছে।`);
+        alert(`${name}-এর একাউন্টে ৳ ${amount} এন্ট্রি করা হয়েছে।`);
         document.getElementById('depositMemberName').value = '';
         document.getElementById('depositAmount').value = '';
       });
     }
 
+    // বাজার যোগ (তারিখ, পরিমান, তথ্য সহ)
     function addBazar() {
       if (!isAdmin) return;
+      const date = document.getElementById('bazarDate').value;
       const amount = parseFloat(document.getElementById('bazarAmount').value);
+      const info = document.getElementById('bazarInfo').value.trim();
+
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
 
-      if (amount > 0) {
-        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
-        docRef.get().then(doc => {
-          const current = doc.exists ? (doc.data().totalBazar || 0) : 0;
-          docRef.set({ totalBazar: current + amount }, { merge: true });
-          document.getElementById('bazarAmount').value = '';
-        });
+      if (isNaN(amount) || amount <= 0 || !date) {
+        return alert("অনুগ্রহ করে তারিখ এবং সঠিক পরিমাণ লিখুন!");
       }
+
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+      
+      docRef.get().then(doc => {
+        const currentBazar = doc.exists ? (doc.data().totalBazar || 0) : 0;
+        return docRef.set({ totalBazar: currentBazar + amount }, { merge: true });
+      }).then(() => {
+        return db.collection('bazar_history').add({
+          date, amount, info, month, year, createdAt: new Date()
+        });
+      }).then(() => {
+        alert("নতুন বাজার খরচ সফলভাবে যোগ হয়েছে!");
+        document.getElementById('bazarAmount').value = '';
+        document.getElementById('bazarInfo').value = '';
+      });
     }
 
     function addFixedBill() {
@@ -910,6 +967,25 @@
           document.getElementById('billName').value = '';
         });
       }
+    }
+
+    // মুদি দোকান বাকি যোগ করার ফানাকশন
+    function addStoreDue() {
+      if (!isAdmin) return;
+      const storeName = document.getElementById('storeName').value.trim();
+      const amount = parseFloat(document.getElementById('storeDueAmount').value);
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      if (!storeName || isNaN(amount) || amount <= 0) return alert("দোকানের নাম ও টাকার পরিমাণ সঠিকভাবে দিন!");
+
+      db.collection('store_dues').add({
+        storeName, amount, month, year, date: todayStr, createdAt: new Date()
+      }).then(() => {
+        alert(`${storeName} দোকানে ৳ ${amount} বাকীর রেকর্ড যুক্ত করা হয়েছে।`);
+        document.getElementById('storeName').value = '';
+        document.getElementById('storeDueAmount').value = '';
+      });
     }
 
     function deleteMember(index) {
