@@ -147,7 +147,6 @@
         </div>
       </div>
 
-      <!-- Daily Meal Details Sub-panel -->
       <div id="dailyDetailsPanel" class="mt-4 pt-3 border-t hidden">
         <h4 class="font-bold text-sm text-gray-700 mb-2">নির্দিষ্ট তারিখের সদস্যভিত্তিক মিল তালিকা:</h4>
         <div class="overflow-x-auto">
@@ -162,15 +161,121 @@
                 <th class="border p-2 text-center">অ্যাকশন</th>
               </tr>
             </thead>
-            <tbody id="dailyDetailsTableBody">
-              <!-- Dynamic Daily Data -->
-            </tbody>
+            <tbody id="dailyDetailsTableBody"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Member Profile Form -->
+    <!-- Public View: Bazar History & Store Dues (সকলের জন্য দৃশ্যমান) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-600">
+        <h3 class="font-bold text-md text-gray-800 mb-3 flex justify-between items-center">
+          <span>🛒 চলতি মাসের বাজার খরচের তালিকা</span>
+        </h3>
+        <div class="overflow-y-auto max-h-60">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-gray-100 border-b">
+                <th class="p-2">তারিখ</th>
+                <th class="p-2">তথ্য</th>
+                <th class="p-2 text-right">পরিমাণ</th>
+              </tr>
+            </thead>
+            <tbody id="publicBazarTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow border-t-4 border-orange-500">
+        <h3 class="font-bold text-md text-gray-800 mb-3">🏪 মুদি দোকান বাকি ও পরিশোধের হিসাব</h3>
+        <div class="overflow-y-auto max-h-60">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-gray-100 border-b">
+                <th class="p-2">দোকানের নাম</th>
+                <th class="p-2 text-right">মোট বাকি</th>
+                <th class="p-2 text-right">মোট পরিশোধ</th>
+                <th class="p-2 text-right">অবশিষ্ট নিট বাকি</th>
+              </tr>
+            </thead>
+            <tbody id="publicStoreDueTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Controls Section -->
+    <div id="adminPanel" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded shadow hidden">
+      <h3 class="font-bold text-lg mb-2 text-yellow-800">⚙️ অ্যাডমিন কন্ট্রোল প্যানেল</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Add Bazar -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm text-green-700">🛒 বাজার খরচ যোগ করুন</h4>
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <label class="block text-xs font-semibold">তারিখ:</label>
+              <input type="date" id="bazarDate" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">পরিমান:</label>
+              <input type="number" id="bazarAmount" placeholder="টাকা" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">তথ্য:</label>
+              <input type="text" id="bazarInfo" placeholder="সাধারণ তথ্য" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <button onclick="addBazar()" class="bg-green-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-green-700 mt-1">বাজার যোগ করুন</button>
+          </div>
+        </div>
+
+        <!-- Member Deposit Input -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm text-blue-700">💵 সদস্যের টাকা জমা / বকেয়া এন্ট্রি</h4>
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <label class="block text-xs font-semibold">সদস্যের নাম:</label>
+              <input type="text" id="depositMemberName" placeholder="সদস্যের নাম" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">পরিমাণ (মাইনাস সাপোর্ট করে):</label>
+              <input type="number" id="depositAmount" placeholder="যেমন: 500 অথবা -500" class="border p-1.5 rounded w-full text-xs">
+            </div>
+            <button onclick="addMemberDeposit()" class="bg-blue-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-700 mt-1">টাকা জমা / এন্ট্রি নিন</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Add Fixed Bill -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm text-purple-700">🏢 ফিক্সড বিল যোগ করুন</h4>
+          <div class="flex gap-1">
+            <input type="text" id="billName" placeholder="নাম (ভাড়া, বিদ্যুৎ)" class="border p-2 rounded w-1/2 text-xs">
+            <input type="number" id="billAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
+            <button onclick="addFixedBill()" class="bg-purple-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
+          </div>
+        </div>
+
+        <!-- Store Due / Payment -->
+        <div class="bg-white p-3 rounded shadow-sm">
+          <h4 class="font-semibold mb-2 text-sm text-orange-700">🏪 মুদি দোকান বাকি ও পরিশোধ এন্ট্রি</h4>
+          <div class="grid grid-cols-1 gap-2">
+            <input type="text" id="storeName" placeholder="দোকানের নাম" class="border p-1.5 rounded w-full text-xs">
+            <input type="number" id="storeDueAmount" placeholder="টাকার পরিমাণ" class="border p-1.5 rounded w-full text-xs">
+            <div class="flex gap-2">
+              <button onclick="addStoreRecord('due')" class="bg-orange-600 text-white px-3 py-1.5 rounded font-bold text-xs w-1/2 hover:bg-orange-700">বাকি যোগ</button>
+              <button onclick="addStoreRecord('paid')" class="bg-green-600 text-white px-3 py-1.5 rounded font-bold text-xs w-1/2 hover:bg-green-700">পরিশোধ যোগ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="resetAllData()" class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700 w-full shadow text-sm">⚠️ চলতি মাসের সকল হিসাব রিসেট করুন</button>
+    </div>
+
+    <!-- Profile Form -->
     <div class="bg-white p-5 rounded-lg shadow mb-6">
       <h3 class="font-bold text-md mb-2 text-gray-700">👤 আমার প্রোফাইল তথ্য (ঐচ্ছিক)</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-3">
@@ -190,80 +295,12 @@
       <button onclick="saveProfile()" class="bg-purple-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-purple-700">তথ্য সেভ করুন</button>
     </div>
 
-    <!-- Admin Controls Section -->
-    <div id="adminPanel" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded shadow hidden">
-      <h3 class="font-bold text-lg mb-2 text-yellow-800">⚙️ অ্যাডমিন কন্ট্রোল প্যানেল</h3>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <!-- Add Bazar (তারিখ, পরিমান, তথ্য) -->
-        <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm text-green-700">🛒 বাজার খরচ যোগ করুন</h4>
-          <div class="grid grid-cols-1 gap-2">
-            <div>
-              <label class="block text-xs font-semibold">তারিখ:</label>
-              <input type="date" id="bazarDate" class="border p-1.5 rounded w-full text-xs">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold">পরিমান:</label>
-              <input type="number" id="bazarAmount" placeholder="টাকা" class="border p-1.5 rounded w-full text-xs">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold">তথ্য:</label>
-              <input type="text" id="bazarInfo" placeholder="বাজারের সাধারণ তথ্য" class="border p-1.5 rounded w-full text-xs">
-            </div>
-            <button onclick="addBazar()" class="bg-green-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-green-700 mt-1">বাজার যোগ করুন</button>
-          </div>
-        </div>
-
-        <!-- Member Deposit Input (Minus Supported) -->
-        <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm text-blue-700">💵 সদস্যের টাকা জমা / বকেয়া এন্ট্রি</h4>
-          <div class="grid grid-cols-1 gap-2">
-            <div>
-              <label class="block text-xs font-semibold">সদস্যের নাম:</label>
-              <input type="text" id="depositMemberName" placeholder="সদস্যের নাম" class="border p-1.5 rounded w-full text-xs">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold">পরিমাণ (বকেয়া হলে মাইনাস - বসান):</label>
-              <input type="number" id="depositAmount" placeholder="যেমন: 500 অথবা -500" class="border p-1.5 rounded w-full text-xs">
-            </div>
-            <button onclick="addMemberDeposit()" class="bg-blue-600 text-white px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-700 mt-1">টাকা জমা / এন্ট্রি নিন</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <!-- Add Fixed Bill -->
-        <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm text-purple-700">🏢 ফিক্সড বিল যোগ করুন</h4>
-          <div class="flex gap-1">
-            <input type="text" id="billName" placeholder="নাম (ভাড়া, বিদ্যুৎ)" class="border p-2 rounded w-1/2 text-xs">
-            <input type="number" id="billAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
-            <button onclick="addFixedBill()" class="bg-purple-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
-          </div>
-        </div>
-
-        <!-- Store Due / মুদি দোকানের বাকীর হিসাব -->
-        <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm text-orange-700">🏪 মুদি দোকান বাকীর হিসাব</h4>
-          <div class="flex gap-1">
-            <input type="text" id="storeName" placeholder="দোকানের নাম" class="border p-2 rounded w-1/3 text-xs">
-            <input type="number" id="storeDueAmount" placeholder="টাকা" class="border p-2 rounded w-1/3 text-xs">
-            <button onclick="addStoreDue()" class="bg-orange-600 text-white px-2 py-2 rounded font-bold text-xs hover:bg-orange-700">বাকি রেকর্ড</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reset All Button -->
-      <button onclick="resetAllData()" class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700 w-full shadow text-sm">⚠️ চলতি মাসের সকল হিসাব রিসেট করুন (নাম সংরক্ষিত থাকবে)</button>
-    </div>
-
-    <!-- Daily Meal Input Form (Advance Allowed) -->
+    <!-- Daily Meal Input Form -->
     <div class="bg-white p-5 rounded-lg shadow mb-6">
       <h3 class="font-bold text-lg mb-3">🍽️ দৈনিক / অগ্রিম মিল ভুক্তি</h3>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
         <div>
-          <label class="block text-sm font-medium mb-1">তারিখ (আজকে বা অগ্রিম)</label>
+          <label class="block text-sm font-medium mb-1">তারিখ</label>
           <input type="date" id="mealDate" class="border p-2 rounded w-full">
         </div>
         <div>
@@ -310,16 +347,14 @@
               <th class="border p-2 text-center">অ্যাকশন</th>
             </tr>
           </thead>
-          <tbody id="memberTableBody">
-            <!-- Dynamic Data -->
-          </tbody>
+          <tbody id="memberTableBody"></tbody>
         </table>
       </div>
     </div>
 
   </div>
 
-  <!-- Profile View Modal -->
+  <!-- Profile Modal -->
   <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white p-6 rounded-lg max-w-md w-full shadow-lg relative">
       <h3 class="font-bold text-lg border-b pb-2 mb-3">👤 সদস্যের প্রোফাইল বিবরণী</h3>
@@ -469,6 +504,7 @@
 
         loadDashboardData();
         loadDailySummary();
+        loadPublicBazarAndStoreData();
       } else {
         document.getElementById('authSection').classList.remove('hidden');
         document.getElementById('dashboardSection').classList.add('hidden');
@@ -627,6 +663,8 @@
           });
         }
       });
+
+      loadPublicBazarAndStoreData();
     }
 
     function renderUI(data) {
@@ -658,7 +696,6 @@
           ? `<span class="text-red-600 font-bold">বকেয়া ৳ ${Math.abs(balance).toFixed(1)}</span>`
           : `<span class="text-green-600 font-bold">জমা ৳ ${balance.toFixed(1)}</span>`;
 
-        // জমার পরিমাণ মাইনাস ফিগার হলে লাল রঙ করার লজিক
         let depositClass = totalEffectiveDeposit < 0 ? "text-red-600 font-bold" : "text-blue-600 font-bold";
         let depositText = `<span class="${depositClass}">৳ ${currentDeposit}</span>`;
         
@@ -854,7 +891,7 @@
 
     function resetAllData() {
       if (!isAdmin) return;
-      if (confirm("আপনি কি নিশ্চিত যে এই মাসের সকল মিল, বাজার খরচ ও ফিক্সড বিল রিসেট করতে চান?\n\n(নোট: সদস্যদের নাম সুরক্ষিত থাকবে এবং বর্তমান জের নতুন মাসে সংরক্ষিত থাকবে)")) {
+      if (confirm("আপনি কি নিশ্চিত যে এই মাসের সকল মিল, বাজার খরচ ও ফিক্সড বিল রিসেট করতে চান?")) {
         const month = document.getElementById('selectMonth').value;
         const year = document.getElementById('selectYear').value;
         const docRef = db.collection('mess_data').doc(`${year}_${month}`);
@@ -888,11 +925,10 @@
             totalFixedBills: 0,
             members: resetMembers
           });
-        }).then(() => alert("চলতি মাসের হিসাব রিসেট করা হয়েছে। সদস্যদের তালিকা ও আগের জের অক্ষুণ্ণ আছে।"));
+        }).then(() => alert("চলতি মাসের হিসাব রিসেট করা হয়েছে।"));
       }
     }
 
-    // সদস্যের টাকা জমা / বকেয়া ইনপুট (মাইনাস ফিগার সাপোর্টেড)
     function addMemberDeposit() {
       if (!isAdmin) return;
       const name = document.getElementById('depositMemberName').value.trim();
@@ -922,7 +958,6 @@
       });
     }
 
-    // বাজার যোগ (তারিখ, পরিমান, তথ্য সহ)
     function addBazar() {
       if (!isAdmin) return;
       const date = document.getElementById('bazarDate').value;
@@ -949,6 +984,7 @@
         alert("নতুন বাজার খরচ সফলভাবে যোগ হয়েছে!");
         document.getElementById('bazarAmount').value = '';
         document.getElementById('bazarInfo').value = '';
+        loadPublicBazarAndStoreData();
       });
     }
 
@@ -969,23 +1005,88 @@
       }
     }
 
-    // মুদি দোকান বাকি যোগ করার ফানাকশন
-    function addStoreDue() {
+    // দোকান বাকি ও পরিশোধ যোগের লজিক
+    function addStoreRecord(type) {
       if (!isAdmin) return;
       const storeName = document.getElementById('storeName').value.trim();
       const amount = parseFloat(document.getElementById('storeDueAmount').value);
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
 
-      if (!storeName || isNaN(amount) || amount <= 0) return alert("দোকানের নাম ও টাকার পরিমাণ সঠিকভাবে দিন!");
+      if (!storeName || isNaN(amount) || amount <= 0) return alert("দোকানের নাম ও সঠিক টাকার পরিমাণ দিন!");
 
-      db.collection('store_dues').add({
-        storeName, amount, month, year, date: todayStr, createdAt: new Date()
+      const dueAmount = type === 'due' ? amount : 0;
+      const paidAmount = type === 'paid' ? amount : 0;
+
+      db.collection('store_records').add({
+        storeName, dueAmount, paidAmount, month, year, date: todayStr, createdAt: new Date()
       }).then(() => {
-        alert(`${storeName} দোকানে ৳ ${amount} বাকীর রেকর্ড যুক্ত করা হয়েছে।`);
+        alert(`${storeName} দোকানে ৳ ${amount} (${type === 'due' ? 'বাকি' : 'পরিশোধ'}) রেকর্ড করা হয়েছে।`);
         document.getElementById('storeName').value = '';
         document.getElementById('storeDueAmount').value = '';
+        loadPublicBazarAndStoreData();
       });
+    }
+
+    // পাবলিক বাজার ও মুদি বাকীর ডাটা লোড করার ফানকশন
+    function loadPublicBazarAndStoreData() {
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+
+      // ১. বাজার খরচ
+      db.collection('bazar_history')
+        .where('month', '==', month)
+        .where('year', '==', year)
+        .get().then(snap => {
+          const tbody = document.getElementById('publicBazarTableBody');
+          tbody.innerHTML = '';
+          snap.forEach(doc => {
+            const d = doc.data();
+            const tr = document.createElement('tr');
+            tr.className = "border-b";
+            tr.innerHTML = `
+              <td class="p-2">${d.date}</td>
+              <td class="p-2 text-gray-600">${d.info || '-'}</td>
+              <td class="p-2 text-right font-bold text-green-600">৳ ${d.amount}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+
+      // ২. মুদি দোকান বাকি ও পরিশোধ
+      db.collection('store_records')
+        .where('month', '==', month)
+        .where('year', '==', year)
+        .get().then(snap => {
+          const storeSummary = {};
+          snap.forEach(doc => {
+            const d = doc.data();
+            if (!storeSummary[d.storeName]) {
+              storeSummary[d.storeName] = { totalDue: 0, totalPaid: 0 };
+            }
+            storeSummary[d.storeName].totalDue += (d.dueAmount || 0);
+            storeSummary[d.storeName].totalPaid += (d.paidAmount || 0);
+          });
+
+          const tbody = document.getElementById('publicStoreDueTableBody');
+          tbody.innerHTML = '';
+
+          for (const store in storeSummary) {
+            const due = storeSummary[store].totalDue;
+            const paid = storeSummary[store].totalPaid;
+            const netDue = due - paid;
+
+            const tr = document.createElement('tr');
+            tr.className = "border-b";
+            tr.innerHTML = `
+              <td class="p-2 font-semibold text-gray-800">${store}</td>
+              <td class="p-2 text-right text-red-600 font-semibold">৳ ${due}</td>
+              <td class="p-2 text-right text-green-600 font-semibold">৳ ${paid}</td>
+              <td class="p-2 text-right font-bold ${netDue > 0 ? 'text-red-600' : 'text-green-600'}">৳ ${netDue}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
     }
 
     function deleteMember(index) {
