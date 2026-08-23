@@ -17,7 +17,7 @@
   <!-- Header -->
   <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center flex-wrap gap-2">
     <div>
-      <h1 class="text-xl font-bold">🏠 স্নেহনীড় হিসাব ও ম্যানেজমেন্ট</h1>
+      <h1 class="text-xl font-bold">🏠 স্নেহনীড় (হিসাব ও ম্যানেজমেন্ট)</h1>
       <p id="liveDateTime" class="text-xs text-blue-100 mt-1"></p>
     </div>
     <div id="userInfo" class="text-sm flex items-center gap-2 hidden">
@@ -167,7 +167,7 @@
       </div>
     </div>
 
-    <!-- Public View: Bazar History & Store Dues (সকলের জন্য দৃশ্যমান) -->
+    <!-- Public View: Bazar History & Store Dues -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-600">
         <h3 class="font-bold text-md text-gray-800 mb-3 flex justify-between items-center">
@@ -180,6 +180,7 @@
                 <th class="p-2">তারিখ</th>
                 <th class="p-2">তথ্য</th>
                 <th class="p-2 text-right">পরিমাণ</th>
+                <th class="p-2 text-center">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody id="publicBazarTableBody"></tbody>
@@ -248,13 +249,22 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <!-- Add Fixed Bill -->
+        <!-- Add Fixed Bill & List -->
         <div class="bg-white p-3 rounded shadow-sm">
-          <h4 class="font-semibold mb-2 text-sm text-purple-700">🏢 ফিক্সড বিল যোগ করুন</h4>
-          <div class="flex gap-1">
+          <h4 class="font-semibold mb-2 text-sm text-purple-700">🏢 ফিক্সড বিল যোগ ও পরিচালনা</h4>
+          <div class="flex gap-1 mb-2">
             <input type="text" id="billName" placeholder="নাম (ভাড়া, বিদ্যুৎ)" class="border p-2 rounded w-1/2 text-xs">
             <input type="number" id="billAmount" placeholder="টাকা" class="border p-2 rounded w-1/2 text-xs">
             <button onclick="addFixedBill()" class="bg-purple-600 text-white px-3 py-2 rounded font-bold text-xs hover:bg-purple-700">যোগ</button>
+          </div>
+          <!-- Fixed Bill Item List -->
+          <div class="max-h-32 overflow-y-auto border-t pt-2">
+            <table class="w-full text-xs text-left">
+              <thead>
+                <tr class="bg-gray-100"><th class="p-1">বিল</th><th class="p-1 text-right">টাকা</th><th class="p-1 text-center">অ্যাকশন</th></tr>
+              </thead>
+              <tbody id="fixedBillListBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -352,6 +362,22 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Edit Deposit Modal -->
+  <div id="editDepositModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white p-5 rounded-lg max-w-sm w-full shadow-lg relative">
+      <h3 class="font-bold text-md border-b pb-2 mb-3">✏️ জমা টাকা সংশোধন (অ্যাডমিন)</h3>
+      <p class="text-xs text-gray-600 mb-2">সদস্য: <span id="editDepositMemberName" class="font-bold text-blue-600"></span></p>
+      <div>
+        <label class="block text-xs font-semibold mb-1">নতুন মোট জমা টাকা:</label>
+        <input type="number" id="editDepositInput" class="border p-2 rounded w-full text-sm">
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="saveAdminDepositEdit()" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold">সেভ করুন</button>
+        <button onclick="closeModal('editDepositModal')" class="bg-gray-400 text-white px-3 py-1.5 rounded text-xs">বাতিল</button>
+      </div>
+    </div>
   </div>
 
   <!-- Profile Modal -->
@@ -461,6 +487,7 @@
     let activeData = [];
     let currentViewingMember = null;
     let editingMemberIndex = null;
+    let editingDepositIndex = null;
     let editingDailyRecord = null;
     let pdfBlobUrl = null;
 
@@ -658,7 +685,7 @@
             userSnap.forEach(uDoc => {
               initialMembers.push({ name: uDoc.id, meals: 0, deposit: 0, prevBalance: 0 });
             });
-            activeData = { totalBazar: 0, totalFixedBills: 0, members: initialMembers };
+            activeData = { totalBazar: 0, totalFixedBills: 0, fixedBillItems: [], members: initialMembers };
             docRef.set(activeData);
           });
         }
@@ -671,6 +698,7 @@
       const members = data.members || [];
       const totalBazar = data.totalBazar || 0;
       const totalFixedBills = data.totalFixedBills || 0;
+      const fixedBillItems = data.fixedBillItems || [];
 
       const totalMeals = members.reduce((sum, m) => sum + (m.meals || 0), 0);
       const mealRate = totalMeals > 0 ? (totalBazar / totalMeals) : 0;
@@ -680,6 +708,24 @@
       document.getElementById('totalMessBazar').innerText = `৳ ${totalBazar}`;
       document.getElementById('currentMealRate').innerText = `৳ ${mealRate.toFixed(2)}`;
       document.getElementById('fixedBillPerHead').innerText = `৳ ${fixedPerHead.toFixed(0)}`;
+
+      // Render Fixed Bill Items
+      const fbListBody = document.getElementById('fixedBillListBody');
+      if(fbListBody) {
+        fbListBody.innerHTML = '';
+        fixedBillItems.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = "border-b";
+          tr.innerHTML = `
+            <td class="p-1">${item.name}</td>
+            <td class="p-1 text-right font-bold">৳ ${item.amount}</td>
+            <td class="p-1 text-center">
+              ${isAdmin ? `<button onclick="deleteFixedBillItem(${idx})" class="text-red-600 font-bold text-xs">🗑️</button>` : '-'}
+            </td>
+          `;
+          fbListBody.appendChild(tr);
+        });
+      }
 
       const tbody = document.getElementById('memberTableBody');
       tbody.innerHTML = '';
@@ -714,13 +760,41 @@
           <td class="border p-2 text-right font-bold text-gray-800">৳ ${totalBill.toFixed(2)}</td>
           <td class="border p-2 text-right">${depositText}</td>
           <td class="border p-2 text-right">${statusHTML}</td>
-          <td class="border p-2 text-center flex gap-1 justify-center">
+          <td class="border p-2 text-center flex gap-1 justify-center flex-wrap">
             <button onclick="viewProfile('${m.name}')" class="bg-blue-500 text-white text-xs px-2 py-1 rounded">প্রোফাইল</button>
-            ${isAdmin ? `<button onclick="openAdminMealEdit(${index}, '${m.name}', ${m.meals || 0})" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">ইডিট</button>
+            ${isAdmin ? `
+            <button onclick="openAdminMealEdit(${index}, '${m.name}', ${m.meals || 0})" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">মিল ইডিট</button>
+            <button onclick="openDepositEditModal(${index}, '${m.name}', ${currentDeposit})" class="bg-green-600 text-white text-xs px-2 py-1 rounded">জমা ইডিট</button>
             <button onclick="deleteMember(${index})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ডিলিট</button>` : ''}
           </td>
         `;
         tbody.appendChild(tr);
+      });
+    }
+
+    function openDepositEditModal(index, name, currentDeposit) {
+      editingDepositIndex = index;
+      document.getElementById('editDepositMemberName').innerText = name;
+      document.getElementById('editDepositInput').value = currentDeposit;
+      document.getElementById('editDepositModal').classList.remove('hidden');
+    }
+
+    function saveAdminDepositEdit() {
+      if(!isAdmin || editingDepositIndex === null) return;
+      const newDeposit = parseFloat(document.getElementById('editDepositInput').value);
+      if(isNaN(newDeposit)) return alert("সঠিক টাকার পরিমাণ লিখুন!");
+
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      docRef.get().then(doc => {
+        let members = doc.data().members || [];
+        members[editingDepositIndex].deposit = newDeposit;
+        return docRef.set({ members }, { merge: true });
+      }).then(() => {
+        alert("সদস্যের জমা টাকা সফলভাবে সংশোধন করা হয়েছে!");
+        closeModal('editDepositModal');
       });
     }
 
@@ -923,6 +997,7 @@
           return docRef.set({
             totalBazar: 0,
             totalFixedBills: 0,
+            fixedBillItems: [],
             members: resetMembers
           });
         }).then(() => alert("চলতি মাসের হিসাব রিসেট করা হয়েছে।"));
@@ -988,8 +1063,56 @@
       });
     }
 
+    function deleteBazarItem(docId, amount) {
+      if(!isAdmin) return;
+      if(confirm("এই বাজার খরচটি মুছে ফেলতে চান?")) {
+        const month = document.getElementById('selectMonth').value;
+        const year = document.getElementById('selectYear').value;
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+        db.collection('bazar_history').doc(docId).delete().then(() => {
+          return docRef.get().then(doc => {
+            if(doc.exists) {
+              const currentBazar = doc.data().totalBazar || 0;
+              return docRef.set({ totalBazar: Math.max(0, currentBazar - amount) }, { merge: true });
+            }
+          });
+        }).then(() => {
+          alert("বাজার খরচটি মুছে দেওয়া হয়েছে!");
+          loadPublicBazarAndStoreData();
+        });
+      }
+    }
+
+    function editBazarItem(docId, oldAmount, oldInfo) {
+      if(!isAdmin) return;
+      const newAmount = parseFloat(prompt("সংশোধিত টাকার পরিমাণ লিখুন:", oldAmount));
+      if(isNaN(newAmount) || newAmount <= 0) return;
+      const newInfo = prompt("সংশোধিত বিবরণ লিখুন:", oldInfo) || '';
+
+      const diff = newAmount - oldAmount;
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+      db.collection('bazar_history').doc(docId).update({
+        amount: newAmount, info: newInfo
+      }).then(() => {
+        return docRef.get().then(doc => {
+          if(doc.exists) {
+            const currentBazar = doc.data().totalBazar || 0;
+            return docRef.set({ totalBazar: Math.max(0, currentBazar + diff) }, { merge: true });
+          }
+        });
+      }).then(() => {
+        alert("বাজার খরচটি সংশোধন করা হয়েছে!");
+        loadPublicBazarAndStoreData();
+      });
+    }
+
     function addFixedBill() {
       if (!isAdmin) return;
+      const name = document.getElementById('billName').value.trim() || 'অন্যান্য';
       const amount = parseFloat(document.getElementById('billAmount').value);
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
@@ -997,15 +1120,44 @@
       if (amount > 0) {
         const docRef = db.collection('mess_data').doc(`${year}_${month}`);
         docRef.get().then(doc => {
-          const current = doc.exists ? (doc.data().totalFixedBills || 0) : 0;
-          docRef.set({ totalFixedBills: current + amount }, { merge: true });
+          const currentTotal = doc.exists ? (doc.data().totalFixedBills || 0) : 0;
+          const items = doc.exists ? (doc.data().fixedBillItems || []) : [];
+          items.push({ name, amount });
+
+          return docRef.set({
+            totalFixedBills: currentTotal + amount,
+            fixedBillItems: items
+          }, { merge: true });
+        }).then(() => {
           document.getElementById('billAmount').value = '';
           document.getElementById('billName').value = '';
         });
       }
     }
 
-    // দোকান বাকি ও পরিশোধ যোগের লজিক
+    function deleteFixedBillItem(index) {
+      if(!isAdmin) return;
+      if(confirm("এই ফিক্সড বিলটি ডিলিট করতে চান?")) {
+        const month = document.getElementById('selectMonth').value;
+        const year = document.getElementById('selectYear').value;
+        const docRef = db.collection('mess_data').doc(`${year}_${month}`);
+
+        docRef.get().then(doc => {
+          if(doc.exists) {
+            let items = doc.data().fixedBillItems || [];
+            const removedAmount = items[index].amount || 0;
+            items.splice(index, 1);
+            const newTotal = items.reduce((sum, item) => sum + item.amount, 0);
+
+            return docRef.set({
+              totalFixedBills: newTotal,
+              fixedBillItems: items
+            }, { merge: true });
+          }
+        });
+      }
+    }
+
     function addStoreRecord(type) {
       if (!isAdmin) return;
       const storeName = document.getElementById('storeName').value.trim();
@@ -1028,7 +1180,6 @@
       });
     }
 
-    // পাবলিক বাজার ও মুদি বাকীর ডাটা লোড করার ফানকশন
     function loadPublicBazarAndStoreData() {
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
@@ -1042,12 +1193,19 @@
           tbody.innerHTML = '';
           snap.forEach(doc => {
             const d = doc.data();
+            const docId = doc.id;
             const tr = document.createElement('tr');
             tr.className = "border-b";
             tr.innerHTML = `
               <td class="p-2">${d.date}</td>
               <td class="p-2 text-gray-600">${d.info || '-'}</td>
               <td class="p-2 text-right font-bold text-green-600">৳ ${d.amount}</td>
+              <td class="p-2 text-center">
+                ${isAdmin ? `
+                <button onclick="editBazarItem('${docId}', ${d.amount}, '${d.info || ''}')" class="text-blue-600 font-bold mr-1">✏️</button>
+                <button onclick="deleteBazarItem('${docId}', ${d.amount})" class="text-red-600 font-bold">🗑️</button>
+                ` : '-'}
+              </td>
             `;
             tbody.appendChild(tr);
           });
