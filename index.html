@@ -367,11 +367,18 @@
   <!-- Edit Deposit Modal -->
   <div id="editDepositModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white p-5 rounded-lg max-w-sm w-full shadow-lg relative">
-      <h3 class="font-bold text-md border-b pb-2 mb-3">✏️ জমা টাকা সংশোধন (অ্যাডমিন)</h3>
+      <h3 class="font-bold text-md border-b pb-2 mb-3">✏️ জমা ও জের টাকা সংশোধন (অ্যাডমিন)</h3>
       <p class="text-xs text-gray-600 mb-2">সদস্য: <span id="editDepositMemberName" class="font-bold text-blue-600"></span></p>
-      <div>
-        <label class="block text-xs font-semibold mb-1">নতুন মোট জমা টাকা:</label>
-        <input type="number" id="editDepositInput" class="border p-2 rounded w-full text-sm">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">নতুন জমা টাকা (চলতি মাস):</label>
+          <input type="number" id="editDepositInput" class="border p-2 rounded w-full text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">পূর্ববর্তী জের / বকেয়া (Prev Balance):</label>
+          <input type="number" id="editPrevBalanceInput" placeholder="যেমন: 500 বা -500" class="border p-2 rounded w-full text-sm">
+          <p class="text-[10px] text-gray-500 mt-1">* বকেয়া থাকলে মাইনাস (যেমন: -500) এবং জের জমা থাকলে প্লাস সংখ্যা দিন।</p>
+        </div>
       </div>
       <div class="mt-4 flex justify-end gap-2">
         <button onclick="saveAdminDepositEdit()" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold">সেভ করুন</button>
@@ -764,7 +771,7 @@
             <button onclick="viewProfile('${m.name}')" class="bg-blue-500 text-white text-xs px-2 py-1 rounded">প্রোফাইল</button>
             ${isAdmin ? `
             <button onclick="openAdminMealEdit(${index}, '${m.name}', ${m.meals || 0})" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">মিল ইডিট</button>
-            <button onclick="openDepositEditModal(${index}, '${m.name}', ${currentDeposit})" class="bg-green-600 text-white text-xs px-2 py-1 rounded">জমা ইডিট</button>
+            <button onclick="openDepositEditModal(${index}, '${m.name}', ${currentDeposit}, ${prevBal})" class="bg-green-600 text-white text-xs px-2 py-1 rounded">জমা ইডিট</button>
             <button onclick="deleteMember(${index})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ডিলিট</button>` : ''}
           </td>
         `;
@@ -772,17 +779,20 @@
       });
     }
 
-    function openDepositEditModal(index, name, currentDeposit) {
+    function openDepositEditModal(index, name, currentDeposit, prevBal) {
       editingDepositIndex = index;
       document.getElementById('editDepositMemberName').innerText = name;
-      document.getElementById('editDepositInput').value = currentDeposit;
+      document.getElementById('editDepositInput').value = currentDeposit || 0;
+      document.getElementById('editPrevBalanceInput').value = prevBal || 0;
       document.getElementById('editDepositModal').classList.remove('hidden');
     }
 
     function saveAdminDepositEdit() {
       if(!isAdmin || editingDepositIndex === null) return;
       const newDeposit = parseFloat(document.getElementById('editDepositInput').value);
-      if(isNaN(newDeposit)) return alert("সঠিক টাকার পরিমাণ লিখুন!");
+      const newPrevBal = parseFloat(document.getElementById('editPrevBalanceInput').value);
+
+      if(isNaN(newDeposit) || isNaN(newPrevBal)) return alert("সঠিক টাকার পরিমাণ লিখুন!");
 
       const month = document.getElementById('selectMonth').value;
       const year = document.getElementById('selectYear').value;
@@ -791,9 +801,10 @@
       docRef.get().then(doc => {
         let members = doc.data().members || [];
         members[editingDepositIndex].deposit = newDeposit;
+        members[editingDepositIndex].prevBalance = newPrevBal;
         return docRef.set({ members }, { merge: true });
       }).then(() => {
-        alert("সদস্যের জমা টাকা সফলভাবে সংশোধন করা হয়েছে!");
+        alert("সদস্যের জমা ও পূর্ববর্তী জের সফলভাবে সংশোধন করা হয়েছে!");
         closeModal('editDepositModal');
       });
     }
