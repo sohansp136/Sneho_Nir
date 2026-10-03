@@ -478,6 +478,10 @@
     const localDay = String(localNow.getDate()).padStart(2, '0');
     const todayStr = `${localYear}-${localMonth}-${localDay}`;
 
+    const monthNames = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+    document.getElementById('selectMonth').value = monthNames[localNow.getMonth()];
+    document.getElementById('selectYear').value = localYear.toString();
+
     document.getElementById('mealDate').value = todayStr;
     document.getElementById('summaryViewDate').value = todayStr;
     document.getElementById('bazarDate').value = todayStr;
