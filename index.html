@@ -340,7 +340,10 @@
           <h3 class="font-bold text-xl text-gray-800">📊 মেস হিসাব বিবরণী</h3>
           <p class="text-sm text-gray-600">মাস: <span id="pdfMonth" class="font-semibold text-blue-600">আগস্ট</span>, বছর: <span id="pdfYear" class="font-semibold text-blue-600">২০২৬</span></p>
         </div>
-        <button onclick="previewPDF()" class="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold shadow hover:bg-red-700">📄 PDF প্রিভিউ ও ডাউনলোড</button>
+        <div class="flex gap-2">
+          <button onclick="exportCSV()" class="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold shadow hover:bg-green-700">📥 CSV এক্সপোর্ট</button>
+          <button onclick="previewPDF()" class="bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold shadow hover:bg-red-700">📄 PDF প্রিভিউ ও ডাউনলোড</button>
+        </div>
       </div>
 
       <div class="overflow-x-auto">
@@ -579,7 +582,10 @@
       
       auth.sendPasswordResetEmail(email)
         .then(() => alert("আপনার ইমেইলে পাসওয়ার্ড রিসেট করার একটি লিংক পাঠানো হয়েছে।"))
-        .catch(err => alert("সমস্যা হয়েছে: " + err.message));
+        .catch(err => {
+          console.error("Password reset error:", err);
+          alert("সমস্যা হয়েছে: " + err.message);
+        });
     }
 
     function register() {
@@ -673,8 +679,35 @@
       }
     }
 
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+    function exportCSV() {
+      if(!activeData || !activeData.members) return alert("কোনো ডেটা নেই!");
+      
+      const headers = ["সদস্যের নাম", "মোট মিল", "মিল খরচ", "ফিক্সড বিল", "মোট বিল", "জমা", "অবশিষ্ট অবস্থা"];
+      const rows = activeData.members.map(m => {
+        const mealRate = activeData.totalBazar / activeData.members.reduce((sum, member) => sum + (member.meals || 0), 0);
+        const fixedPerHead = activeData.totalFixedBills / activeData.members.length;
+        const mealCost = (m.meals || 0) * mealRate;
+        const totalBill = mealCost + fixedPerHead;
+        const balance = (m.deposit || 0) + (m.prevBalance || 0) - totalBill;
+        
+        return [
+          m.name,
+          (m.meals || 0).toFixed(1),
+          mealCost.toFixed(2),
+          fixedPerHead.toFixed(0),
+          totalBill.toFixed(2),
+          (m.deposit || 0) + (m.prevBalance || 0),
+          balance.toFixed(2)
+        ];
+      });
+
+      let csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `mess_data_${document.getElementById('selectMonth').value}_${document.getElementById('selectYear').value}.csv`);
+      document.body.appendChild(link);
+      link.click();
     }
 
     function loadDashboardData() {
@@ -714,6 +747,7 @@
       const totalMeals = members.reduce((sum, m) => sum + (m.meals || 0), 0);
       const mealRate = totalMeals > 0 ? (totalBazar / totalMeals) : 0;
       const fixedPerHead = members.length > 0 ? (totalFixedBills / members.length) : 0;
+      const maxMeals = Math.max(...members.map(m => m.meals || 0), 0);
 
       document.getElementById('totalMessMeals').innerText = totalMeals.toFixed(1);
       document.getElementById('totalMessBazar').innerText = `৳ ${totalBazar}`;
@@ -763,8 +797,18 @@
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-gray-50 member-row";
         tr.setAttribute('data-name', m.name);
+        
+        const percentage = maxMeals > 0 ? ((m.meals || 0) / maxMeals) * 100 : 0;
+        const progressBar = `
+          <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1" title="${(m.meals || 0)} মিল">
+            <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+          </div>`;
+
         tr.innerHTML = `
-          <td class="border p-2 font-semibold text-blue-600 cursor-pointer underline" onclick="viewProfile('${m.name}')">${m.name}</td>
+          <td class="border p-2 font-semibold text-blue-600 cursor-pointer underline" onclick="viewProfile('${m.name}')">
+            ${m.name}
+            ${progressBar}
+          </td>
           <td class="border p-2 text-center font-bold text-blue-600">${(m.meals || 0).toFixed(1)}</td>
           <td class="border p-2 text-right">৳ ${mealCost.toFixed(2)}</td>
           <td class="border p-2 text-right">৳ ${fixedPerHead.toFixed(0)}</td>
