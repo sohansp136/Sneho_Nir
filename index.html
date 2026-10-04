@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>স্নেহনীড় হিসাব ও ম্যানেজমেন্ট</title>
+  <link id="appFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -455,6 +456,26 @@
           <h4 class="font-bold text-amber-900 mb-1 text-sm">👑 সুপার অ্যাডমিন প্যানেল: ম্যানেজার নিয়োগ ও ব্যবস্থাপনা</h4>
           <p class="text-xs text-gray-600 mb-3">যেকোনো সদস্যকে ম্যানেজার হিসেবে নিয়োগ দিতে বা ম্যানেজার পদ প্রত্যাহার করতে পারেন। ম্যানেজার সদস্য বাদ দিতে পারবেন না, তবে বাকি সব হিসাব পরিচালনা করতে পারবেন।</p>
           <div id="managerListContainer" class="space-y-2 text-xs"></div>
+
+          <!-- Super Admin Favicon Management Section -->
+          <div class="mt-4 pt-4 border-t border-amber-200">
+            <h4 class="font-bold text-amber-900 mb-1 text-sm">🎨 ওয়েবসাইট ফেভিকন (Favicon) ব্যবস্থাপনা</h4>
+            <p class="text-xs text-gray-600 mb-3">আপনার পছন্দমতো যেকোনো ছবি আপলোড করুন অথবা ইমোজি/আইকন লিংক ব্যবহার করুন।</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div class="flex items-center gap-2">
+                <span id="currentFaviconPreview" class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl bg-gray-50 shadow-inner">🏠</span>
+                <div class="text-xs text-gray-500">বর্তমান ফেভিকন</div>
+              </div>
+              <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input type="text" id="faviconInputUrl" placeholder="ইমেজ URL বা ইমোজি (যেমন: 🏫 বা https://...)" class="border p-1.5 rounded text-xs w-full">
+                <input type="file" id="faviconInputFile" accept="image/*" class="border p-1 rounded text-xs w-full bg-white file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200">
+                <div class="flex gap-1">
+                  <button onclick="saveCustomFavicon()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-xs transition flex-1">পরিবর্তন করুন</button>
+                  <button onclick="resetCustomFavicon()" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-3 py-1.5 rounded text-xs transition">রিসেট</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Admin Notice & Poll Control -->
@@ -977,6 +998,7 @@ CREATE POLICY "Allow public read-write for store_records" ON public.store_record
           supabaseClient = window.supabase.createClient(url, key);
           updateSupabaseBadge(true);
           console.log("Supabase active:", url);
+          loadCustomFavicon();
         } else {
           updateSupabaseBadge(false);
         }
@@ -998,7 +1020,10 @@ CREATE POLICY "Allow public read-write for store_records" ON public.store_record
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initSupabase);
+    window.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+      loadCustomFavicon();
+    });
     setTimeout(initSupabase, 500);
 
     const localNow = new Date();
@@ -1145,6 +1170,133 @@ CREATE POLICY "Allow public read-write for store_records" ON public.store_record
       }
       localStorage.setItem('mess_manager_emails', JSON.stringify(managerEmails));
       renderManagerAssignmentList();
+    }
+
+    function applyFavicon(val) {
+      if (!val) val = "🏠";
+      let link = document.getElementById('appFavicon');
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'appFavicon';
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+
+      if (val.startsWith('http') || val.startsWith('data:') || val.startsWith('blob:')) {
+        link.type = 'image/x-icon';
+        link.href = val;
+      } else {
+        link.type = 'image/svg+xml';
+        link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${val}</text></svg>`;
+      }
+
+      const prev = document.getElementById('currentFaviconPreview');
+      if (prev) {
+        if (val.startsWith('http') || val.startsWith('data:') || val.startsWith('blob:')) {
+          prev.innerHTML = `<img src="${val}" class="w-8 h-8 object-contain rounded">`;
+        } else {
+          prev.innerText = val;
+        }
+      }
+    }
+
+    function loadCustomFavicon() {
+      // 1. Instant load from local storage
+      const stored = localStorage.getItem('mess_custom_favicon');
+      if (stored) {
+        applyFavicon(stored);
+      }
+
+      // 2. Real-time sync with Firebase Firestore
+      try {
+        db.collection('mess_data').doc('app_settings').onSnapshot(doc => {
+          if (doc.exists && doc.data() && typeof doc.data().favicon !== 'undefined') {
+            const fav = doc.data().favicon;
+            localStorage.setItem('mess_custom_favicon', fav);
+            applyFavicon(fav);
+          }
+        }, err => {
+          console.warn("Firestore favicon sync notice:", err);
+        });
+      } catch (e) {}
+
+      // 3. Sync with Supabase / PostgreSQL if available
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.from('mess_data').select('data').eq('id', 'app_settings').single().then(({ data, error }) => {
+          if (!error && data && data.data && typeof data.data.favicon !== 'undefined') {
+            const fav = data.data.favicon;
+            localStorage.setItem('mess_custom_favicon', fav);
+            applyFavicon(fav);
+          }
+        }).catch(() => {});
+      }
+    }
+
+    function saveCustomFavicon() {
+      if (!isSuperAdmin) return alert("শুধুমাত্র সুপার অ্যাডমিন ফেভিকন পরিবর্তন করতে পারবেন!");
+      const urlInput = document.getElementById('faviconInputUrl').value.trim();
+      const fileInput = document.getElementById('faviconInputFile');
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64 = e.target.result;
+          persistFavicon(base64);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else if (urlInput) {
+        persistFavicon(urlInput);
+      } else {
+        alert("দয়া করে ফেভিকন ইমেজ ফাইল বা ইমোজি দিন!");
+      }
+    }
+
+    async function persistFavicon(val) {
+      localStorage.setItem('mess_custom_favicon', val);
+      applyFavicon(val);
+
+      // Save to Firebase Firestore
+      try {
+        await db.collection('mess_data').doc('app_settings').set({ 
+          favicon: val, 
+          updatedAt: new Date().toISOString() 
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore favicon save error:", err);
+      }
+
+      // Save to Supabase / PostgreSQL
+      try {
+        await syncDataToSupabase('app_settings', { favicon: val, updatedAt: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Supabase favicon sync error:", err);
+      }
+
+      alert("🎉 ফেভিকন সফলভাবে ডাটাবেসে সেভ ও পরিবর্তন করা হয়েছে!");
+    }
+
+    async function resetCustomFavicon() {
+      if (!isSuperAdmin) return alert("শুধুমাত্র সুপার অ্যাডমিন ফেভিকন রিসেট করতে পারবেন!");
+      if (!confirm("ফেভিকন ডিফল্ট (🏠) অবস্থায় ফিরিয়ে নিতে চান?")) return;
+      localStorage.removeItem('mess_custom_favicon');
+      applyFavicon('');
+
+      try {
+        await db.collection('mess_data').doc('app_settings').set({ 
+          favicon: '', 
+          updatedAt: new Date().toISOString() 
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore favicon reset error:", err);
+      }
+
+      try {
+        await syncDataToSupabase('app_settings', { favicon: '', updatedAt: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Supabase favicon reset sync error:", err);
+      }
+
+      alert("ফেভিকন ডাটাবেস থেকে রিসেট করে ডিফল্ট অবস্থায় ফিরিয়ে দেওয়া হয়েছে।");
     }
 
     function handleLoggedInUser(user) {
