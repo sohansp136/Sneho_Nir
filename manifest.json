@@ -1,0 +1,38 @@
+{
+  "id": "/",
+  "name": "স্নেহনীড় হিসাব ও ম্যানেজমেন্ট",
+  "short_name": "স্নেহনীড়",
+  "description": "স্নেহনীড় মেস ম্যানেজমেন্ট, মিল হিসাব, বাজার ও সার্বিক হিসাব নিকাশ সিস্টেম",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#2563eb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#1e40af" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <!-- Background with smooth squircle / rounded rect -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  
+  <!-- Outer glowing accent ring -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="8" />
+
+  <!-- Beautiful Modern House & Heart Symbol (স্নেহনীড়) -->
+  <g filter="url(#dropShadow)">
+    <!-- Roof -->
+    <path d="M256 100 L96 230 C90 235 90 245 98 250 L120 266 C126 270 134 269 139 265 L256 170 L373 265 C378 269 386 270 392 266 L414 250 C422 245 422 235 416 230 Z" fill="#ffffff" />
+    <path d="M346 140 L386 140 L386 195 L346 162 Z" fill="#ffffff" />
+
+    <!-- House Body -->
+    <path d="M140 250 L372 250 L372 380 C372 396 359 410 342 410 L170 410 C153 410 140 396 140 380 Z" fill="#f8fafc" />
+
+    <!-- Door / Heart in center of home -->
+    <path d="M256 280 C240 260 210 260 200 280 C188 304 210 330 256 360 C302 330 324 304 312 280 C302 260 272 260 256 280 Z" fill="#ef4444" />
+    
+    <!-- Foundation line -->
+    <rect x="180" y="375" width="152" height="15" rx="7" fill="#3b82f6" opacity="0.3" />
+  </g>
+</svg>
