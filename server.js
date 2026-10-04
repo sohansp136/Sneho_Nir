@@ -1,6 +1,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +22,36 @@ const transporter = nodemailer.createTransport({
 });
 
 app.use(express.static(__dirname));
+
+app.get('/api/supabase-config', (req, res) => {
+  try {
+    const configPath = join(__dirname, 'supabase-config.json');
+    let fileConfig = {};
+    if (fs.existsSync(configPath)) {
+      fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+    const supabaseUrl = process.env.SUPABASE_URL || fileConfig.supabaseUrl || '';
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || fileConfig.supabaseAnonKey || '';
+    res.json({ supabaseUrl, supabaseAnonKey });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read supabase config' });
+  }
+});
+
+app.post('/api/supabase-config', (req, res) => {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = req.body;
+    const configPath = join(__dirname, 'supabase-config.json');
+    const newConfig = {
+      supabaseUrl: (supabaseUrl || '').trim(),
+      supabaseAnonKey: (supabaseAnonKey || '').trim()
+    };
+    fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf8');
+    res.json({ success: true, ...newConfig });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save supabase config' });
+  }
+});
 
 app.post('/api/send-email', async (req, res) => {
   const { to, subject, text } = req.body;

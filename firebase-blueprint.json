@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "MessData": {
+      "title": "Mess Data Record",
+      "description": "Stores monthly mess accounts, meal totals, deposits, and centralized notices/polls",
+      "type": "object",
+      "properties": {
+        "members": { "type": "array", "description": "List of active mess members and their stats" },
+        "bazars": { "type": "array", "description": "List of bazar items for the month" },
+        "items": { "type": "array", "description": "Aggregated notices or polls list" },
+        "fixedCosts": { "type": "array", "description": "Fixed expenses for the month" },
+        "stores": { "type": "array", "description": "Store due/paid records" }
+      }
+    },
+    "Notice": {
+      "title": "Notice",
+      "description": "A mess announcement posted by an admin or member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "desc": { "type": "string" },
+        "date": { "type": "string" },
+        "author": { "type": "string" },
+        "authorEmail": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["title", "desc"]
+    },
+    "Poll": {
+      "title": "Poll",
+      "description": "A voting poll for mess decisions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "options": { "type": "array" },
+        "votes": { "type": "object" },
+        "author": { "type": "string" },
+        "authorEmail": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["question", "options"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Profile details of a registered mess member",
+      "type": "object",
+      "properties": {
+        "phone": { "type": "string" },
+        "room": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    },
+    "DailyMeal": {
+      "title": "Daily Meal",
+      "description": "Daily meal entry for a member on a specific date",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "date": { "type": "string" },
+        "bf": { "type": "number" },
+        "lunch": { "type": "number" },
+        "dinner": { "type": "number" },
+        "total": { "type": "number" }
+      },
+      "required": ["name", "date"]
+    },
+    "BazarHistory": {
+      "title": "Bazar History",
+      "description": "Bazar expenses ledger",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "info": { "type": "string" },
+        "payer": { "type": "string" }
+      },
+      "required": ["date", "amount"]
+    },
+    "StoreRecord": {
+      "title": "Store Record",
+      "description": "Mess grocery store records",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["storeName", "amount", "type"]
+    }
+  },
+  "firestore": {
+    "/mess_data/{docId}": {
+      "schema": "MessData",
+      "description": "Stores monthly mess calculations and aggregate records"
+    },
+    "/notices/{noticeId}": {
+      "schema": "Notice",
+      "description": "Individual notice documents"
+    },
+    "/polls/{pollId}": {
+      "schema": "Poll",
+      "description": "Individual voting polls"
+    },
+    "/user_profiles/{username}": {
+      "schema": "UserProfile",
+      "description": "User profile records"
+    },
+    "/daily_meals/{recordId}": {
+      "schema": "DailyMeal",
+      "description": "Daily individual member meals"
+    },
+    "/bazar_history/{recordId}": {
+      "schema": "BazarHistory",
+      "description": "Individual bazar expenditure records"
+    },
+    "/store_records/{recordId}": {
+      "schema": "StoreRecord",
+      "description": "Store ledger records"
+    }
+  }
+}
